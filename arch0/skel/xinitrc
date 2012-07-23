@@ -1,0 +1,5 @@
+#!/bin/sh
+autocutsel -fork &
+autocutsel -selection PRIMARY -fork &
+xautolock -time 10 -locker "i3lock -c 000000" &
+exec i3

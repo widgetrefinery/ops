@@ -1,0 +1,3 @@
+xterm*background: #000000
+xterm*foreground: #999999
+xterm*metaSendsEscape: true

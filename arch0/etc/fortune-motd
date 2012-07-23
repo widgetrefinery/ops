@@ -1,0 +1,2 @@
+#!/bin/sh
+fortune computers cookie definitions linux magic startrek | sed -e '1i\\' -e '$a\\' > /etc/motd
