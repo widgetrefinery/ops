@@ -7,8 +7,12 @@
 
 HISTFILE=
 HISTFILESIZE=0
-LESSHISTFILE=-
-TMOUT="$((60*10))"
+
+export LESSHISTFILE=-
+
+if [ 'xterm' != "$TERM" ]; then
+	TMOUT="$((60*10))"
+fi
 
 PS1='<RESET>[<CYAN>\t<RESET>]<$((UID?GREEN:RED))>\u<RESET>@<GREEN>\h<RESET>:<CYAN>\w<0>\$ '
 PS1=${PS1//RESET/0;\$((\$??7:0))}

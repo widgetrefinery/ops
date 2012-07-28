@@ -3,21 +3,21 @@
 ## /
 
 	dd if=/dev/zero of=/dev/sda
-	mdadm --create --metadata=1.1 --homehost=*hostname* --raid-devices=2 --level=1 /dev/md0 /dev/sda missing
+	mdadm --create --metadata=1.1 --homehost=${HOSTNAME} --raid-devices=2 --level=1 /dev/md0 /dev/sda missing
 	pvcreate /dev/md0
 	vgcreate vg0 /dev/md0
-	lvcreate -L8G -n *hostname*_root vg0
-	cryptsetup luksFormat --use-random /dev/vg0/*hostname*_root
-	cryptsetup luksOpen /dev/vg0/*hostname*_root *hostname*-root
-	dd if=/dev/zero of=/dev/mapper/*hostname*-root
-	mke2fs -t ext4 /dev/mapper/*hostname*-root
-	mount /dev/mapper/*hostname*-root /mnt
+	lvcreate -L8G -n ${HOSTNAME}_root vg0
+	cryptsetup luksFormat --use-random /dev/vg0/${HOSTNAME}_root
+	cryptsetup luksOpen /dev/vg0/${HOSTNAME}_root ${HOSTNAME}-root
+	dd if=/dev/zero of=/dev/mapper/${HOSTNAME}-root
+	mke2fs -t ext4 /dev/mapper/${HOSTNAME}-root
+	mount /dev/mapper/${HOSTNAME}-root /mnt
 
 ## /boot
 
 	parted /dev/sdc mklabel gpt
-	parted /dev/sdc mkpart primary 2048s 20479s (512B sectors; ~10MB partition)
-	parted /dev/sdc mkpart primary 20480s -1s (rest of drive)
+	parted /dev/sdc mkpart primary 2048s 20479s	#512B sectors; ~10MB partition
+	parted /dev/sdc mkpart primary 20480s -1s	#rest of drive
 	parted /dev/sdc set 1 bios_grub on
 	mke2fs -t ext2 /dev/sdc2
 	mkdir /mnt/boot
@@ -41,21 +41,25 @@ Skip installing the following modules:
 
 ## mdadm.conf
 
-    mdadm --detail --scan >> /mnt/etc/mdadm.conf
+	mdadm --detail --scan >> /mnt/etc/mdadm.conf
 
 ## mkinitcpio.conf
 
+Add video driver to MODULES:
+
+	MODULES="i915"
+
 Add mdadm_udev, lvm2, encrypt to HOOKS:
 
-    HOOKS="base udev autodetect pata scsi sata mdadm_udev lvm2 usbinput encrypt filesystems fsck"
+	HOOKS="base udev autodetect pata scsi sata mdadm_udev lvm2 usbinput encrypt filesystems fsck"
 
 ## grub2
 
-    grub-mkconfig -o /boot/grub/grub.cfg
-    grub-install /dev/sdc
-    rm -f /boot/grub/grub.cfg.example
-    sed -i "s/set root=.*$/set root='hd0,gpt2'/" /boot/grub/grub.cfg
-    sed -i '/vmlinuz-linux/ s!$! cryptdevice=/dev/mapper/vg0-*hostname*_root:*hostname*-root nomodeset!' /boot/grub/grub.cfg
+	grub-mkconfig -o /boot/grub/grub.cfg
+	grub-install /dev/sdc
+	rm -f /boot/grub/grub.cfg.example
+	sed -i "s/set root=.*$/set root='hd0,gpt2'/" /boot/grub/grub.cfg
+	sed -i '/vmlinuz-linux/ s!$! cryptdevice=/dev/mapper/vg0-${HOSTNAME}_root:${HOSTNAME}-root!' /boot/grub/grub.cfg
 
 Can also delete the search statements from grub.cfg.
 
@@ -184,4 +188,42 @@ Can also delete the search statements from grub.cfg.
 * sylpheed
 * xautolock
 * xterm
+
+# KVM
+
+* bridge-utils
+* gtk-vnc
+* qemu-kvm
+* uml_utilities
+
+1. Add kvm and kvm-intel to MODULES list in /etc/rc.conf
+2. Install etc/qemu-ifup to /etc/qemu-ifup
+3. Install etc/bridge.conf to /etc/qemu/bridge.conf
+4. Install win_vm.sh to home dir
+
+## Windows VM
+
+1. Create a partition for the primary hdd:
+
+	lvcreate -L16G -n ${VM_HOSTNAME}_root vg0
+	cryptsetup luksFormat --use-random /dev/vg0/${VM_HOSTNAME}_root
+	cryptsetup luksOpen /dev/vg0/${VM_HOSTNAME}_root ${VM_HOSTNAME}-root
+	dd if=/dev/zero of=/dev/mapper/${VM_HOSTNAME}-root
+
+2. Boot up the vm and install the os:
+
+	./win_vm.sh ${VM_HOSTNAME} 1 os /path/to/win.iso
+	gvncviewer localhost:1 &
+	telnet localhost 5801 #enter c to start the vm
+
+3. Install virtio drivers:
+
+	1. Download virtio driver iso from: [virtio drivers](http://www.linux-kvm.org/page/WindowsGuestDrivers/Download_Drivers)
+	2. Boot the vm and install th virtio drivers
+
+## Switching cdrom iso
+
+	ctrl+alt+2 (to switch to monitor console if using sdl)
+	info block (to display current block devices)
+	change ide1-cd0 /path/to/iso (mount iso)
 
