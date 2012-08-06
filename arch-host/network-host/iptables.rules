@@ -5,6 +5,8 @@
 -A INPUT -i lo -j ACCEPT
 -A INPUT -p tcp --dport 22 -j ACCEPT
 -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -i eth0 -o nat64 -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -i nat64 -o eth0 -j ACCEPT
 -A OUTPUT -o lo -j ACCEPT
 -A OUTPUT -p icmp -j ACCEPT
 -A OUTPUT -p tcp --dport 22 -j ACCEPT
@@ -17,4 +19,10 @@
 -A OUTPUT -p tcp -j REJECT --reject-with tcp-reset
 -A OUTPUT -p udp -j REJECT --reject-with icmp-port-unreachable
 -A OUTPUT -j REJECT --reject-with icmp-proto-unreachable
+COMMIT
+*nat
+:PREROUTING ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+-A POSTROUTING -o eth0 -j MASQUERADE
 COMMIT

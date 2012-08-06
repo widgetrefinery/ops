@@ -3,15 +3,15 @@
 ## /
 
 	dd if=/dev/zero of=/dev/sda
-	mdadm --create --metadata=1.1 --homehost=${HOSTNAME} --raid-devices=2 --level=1 /dev/md0 /dev/sda missing
+	mdadm --create --metadata=1.1 --homehost=$HOSTNAME --raid-devices=2 --level=1 /dev/md0 /dev/sda missing
 	pvcreate /dev/md0
 	vgcreate vg0 /dev/md0
-	lvcreate -L8G -n ${HOSTNAME}_root vg0
-	cryptsetup luksFormat --use-random /dev/vg0/${HOSTNAME}_root
-	cryptsetup luksOpen /dev/vg0/${HOSTNAME}_root ${HOSTNAME}-root
-	dd if=/dev/zero of=/dev/mapper/${HOSTNAME}-root
-	mke2fs -t ext4 /dev/mapper/${HOSTNAME}-root
-	mount /dev/mapper/${HOSTNAME}-root /mnt
+	lvcreate -L8G -n $HOSTNAME vg0
+	cryptsetup luksFormat --use-random /dev/vg0/$HOSTNAME
+	cryptsetup luksOpen /dev/vg0/$HOSTNAME $HOSTNAME
+	dd if=/dev/zero of=/dev/mapper/$HOSTNAME
+	mke2fs -t ext4 /dev/mapper/$HOSTNAME
+	mount /dev/mapper/$HOSTNAME /mnt
 
 ## /boot
 
@@ -59,7 +59,7 @@ Add mdadm_udev, lvm2, encrypt to HOOKS:
 	grub-install /dev/sdc
 	rm -f /boot/grub/grub.cfg.example
 	sed -i "s/set root=.*$/set root='hd0,gpt2'/" /boot/grub/grub.cfg
-	sed -i '/vmlinuz-linux/ s!$! cryptdevice=/dev/mapper/vg0-${HOSTNAME}_root:${HOSTNAME}-root!' /boot/grub/grub.cfg
+	sed -i '/vmlinuz-linux/ s!$! cryptdevice=/dev/mapper/vg0-$HOSTNAME:$HOSTNAME!' /boot/grub/grub.cfg
 
 Can also delete the search statements from grub.cfg.
 
@@ -73,17 +73,14 @@ Can also delete the search statements from grub.cfg.
 
 # Core Apps
 
+## base-devel
+
 ## dnsutils
 
 ## fortune-mod
 
 1. Install etc/fortune-motd to /etc/cron.hourly/fortune-motd
 2. Remove pam_motd.so from /etc/pam.d/system-login
-
-## iptables
-
-1. Install etc/iptables.rules to /etc/iptables/iptables.rules.
-2. Add iptables to DAEMONS list in /etc/rc.conf
 
 ## mlocate
 
@@ -112,6 +109,8 @@ Can also delete the search statements from grub.cfg.
 	Defaults timestamp_timeout=0
 	%wheel ALL=(ALL) ALL
 
+## traceroute
+
 ## vim
 
 1. Create /etc/skel/.vimrc:
@@ -139,6 +138,78 @@ Can also delete the search statements from grub.cfg.
 ## login.defs
 
 1. Add 'CREATE_HOME yes' to /etc/login.defs
+
+# Host Networking
+
+## disable ipv6
+
+1. Disable ipv6 on eth0:
+	echo 'net.ipv6.conf.eth0.disable_ipv6 = 1' >> /etc/sysctl.conf
+
+2. Disable ipv6 solicitation in dhcpcd:
+	echo noipv6rs >> /etc/dhcpcd.conf
+
+## iptables
+
+1. Install etc/iptables.rules to /etc/iptables/iptables.rules.
+2. Add iptables to DAEMONS list in /etc/rc.conf
+
+# Guest Networking
+
+## Get ipv6 Prefix
+
+[simple dns plus](www.simpledns.com/private-ipv6.aspx)
+
+## bridge.conf
+
+Install network-guest/bridge.conf to /etc/qemu/bridge.conf
+
+## bind
+
+1. Install network-guest/named.conf to /etc/named.conf
+2. Install network-guest/named.zone to /var/named/named.zone
+3. Install network-guest/named.reverse to /var/named/named.reverse
+4. Add named to DAEMONS list in /etc/rc.conf
+
+## dhcpd
+
+1. Install network-guest/dhcpd.conf to /etc/dhcpd.conf
+2. Add dhcp6 to DAEMONS list in /etc/rc.conf
+
+## kvm-network
+
+1. Install network-guest/kvm-network.sh to /etc/rc.d/kvm-network
+2. Add kvm-network to DAEMONS list in /etc/rc.conf
+
+## radvd
+
+1. Install network-guest/radvd.conf to /etc/radvd.conf
+2. Add radvd to DAEMONS list in /etc/rc.conf
+
+## tayga 0.9.2-1
+
+1. Install from aur:
+
+	wget http://aur.archlinux.org/packages/ta/tayga/tayga.tar.gz
+	tar -xf tayga.tar.gz
+	cd tayga
+	makepkg
+	sudo pacman -U tayga-0.9.2-1-i686.pkg.tar.xz
+
+2. Install network-guest/tayga.conf to /etc/tayga.conf
+
+## totd 1.5.1-4
+
+1. Install from aur:
+
+	wget http://aur.archlinux.org/packages/to/totd/totd.tar.gz
+	tar -xf totd.tar.gz
+	cd totd
+	makepkg
+	sudo pacman -U totd-1.5.1-4-i686.pkg.tar.xz
+
+2. Install network-guest/totd.conf to /etc/totd.conf
+3. Add totd to DAEMONS list in /etc/rc.conf
 
 # GUI
 
@@ -191,35 +262,44 @@ Can also delete the search statements from grub.cfg.
 
 # KVM
 
+* bind
 * bridge-utils
-* gtk-vnc
+* dncp
 * qemu-kvm
+* radvd
+* tigervnc
 * uml_utilities
 
 1. Add kvm and kvm-intel to MODULES list in /etc/rc.conf
-2. Install etc/qemu-ifup to /etc/qemu-ifup
-3. Install etc/bridge.conf to /etc/qemu/bridge.conf
-4. Install win_vm.sh to home dir
+4. Install win_vm.sh to a convenient location
+5. Add yourself to the disk, kvm, wheel groups
+6. Modify /etc/rc.sysinit to create /dev/hugepages:
+	sed -i 's!\(mkdir -p /dev/{\)!\1hugepages,!' /etc/rc.sysinit
+7. Add hugepages to /etc/fstab:
+	hugetlbfs	/dev/hugepages	hugetlbfs	mode=1770,gid=kvm	0 0
+8. Note HugePagesize in /proc/meminfo. Take the amount of memory to allocate for vms and divide by this number. Cat it to /proc/sys/vm/nr_hugepages like so:
+	echo 140 > /proc/sys/vm/nr_hugepages
+9. If all goes well add it to /etc/sysctl.conf:
+	vm.nr_hugepages = 140
 
 ## Windows VM
 
 1. Create a partition for the primary hdd:
 
-	lvcreate -L16G -n ${VM_HOSTNAME}_root vg0
-	cryptsetup luksFormat --use-random /dev/vg0/${VM_HOSTNAME}_root
-	cryptsetup luksOpen /dev/vg0/${VM_HOSTNAME}_root ${VM_HOSTNAME}-root
-	dd if=/dev/zero of=/dev/mapper/${VM_HOSTNAME}-root
+	lvcreate -L16G -n $VM_HOSTNAME vg0
+	cryptsetup luksFormat --use-random /dev/vg0/$VM_HOSTNAME
+	cryptsetup luksOpen /dev/vg0/$VM_HOSTNAME $VM_HOSTNAME
+	dd if=/dev/zero of=/dev/mapper/$VM_HOSTNAME
 
 2. Boot up the vm and install the os:
 
-	./win_vm.sh ${VM_HOSTNAME} 1 os /path/to/win.iso
-	gvncviewer localhost:1 &
+	./win_vm.sh $VM_HOSTNAME 1 os /path/to/win.iso
+	vncviewer localhost:5901 &
 	telnet localhost 5801 #enter c to start the vm
 
-3. Install virtio drivers:
+3. Install [virtio drivers](http://www.linux-kvm.org/page/WindowsGuestDrivers/Download_Drivers)
 
-	1. Download virtio driver iso from: [virtio drivers](http://www.linux-kvm.org/page/WindowsGuestDrivers/Download_Drivers)
-	2. Boot the vm and install th virtio drivers
+4. Install [dibbler](http://klub.com.pl/dhcpv6/#DOWNLOAD)
 
 ## Switching cdrom iso
 

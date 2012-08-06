@@ -1,0 +1,13 @@
+$ORIGIN 0.0.0.0.0.0.0.0.0.0.0.0.0.0.d.f.ip6.arpa.
+$TTL 1D
+
+@					IN SOA	kusanagi.wr.v6. root.wr.v6. (
+					     	42		; serial (yyyymmdd##)
+					     	3H		; refresh
+					     	15M		; retry
+					     	1W		; expiry
+					     	1D )		; minimum ttl
+
+					IN NS	kusanagi.wr.v6.
+1.0.0.0.5.0.0.0.0.0.0.0.0.0.0.0		IN PTR	kusanagi.wr.v6.
+

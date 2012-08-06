@@ -1,0 +1,13 @@
+$ORIGIN wr.v6.
+$TTL 1D
+
+@			IN SOA	kusanagi.wr.v6. root.wr.v6. (
+				42		; serial (yyyymmdd##)
+				3H		; refresh
+				15M		; retry
+				1W		; expiry
+				1D )		; minimum ttl
+
+			IN NS	kusanagi.wr.v6.
+kusanagi		IN AAAA	fd00::5:1
+
