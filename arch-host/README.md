@@ -160,6 +160,15 @@ Can also delete the search statements from grub.cfg.
 
 [simple dns plus](www.simpledns.com/private-ipv6.aspx)
 
+## Enable Packet Forwarding
+
+1. Edit /etc/sysctl.conf:
+
+	uncomment "net.ipv4.ip_forward = 1"
+	uncomment "net.ipv6.conf.all.forwarding = 1"
+
+2. Reload kernel parameters via "sysctl -p"
+
 ## bridge.conf
 
 Install network-guest/bridge.conf to /etc/qemu/bridge.conf
