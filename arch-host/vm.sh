@@ -19,8 +19,8 @@ function f_run {
 	vm_disk="-drive file=/dev/mapper/$vm_name,if=virtio,index=0,media=disk,cache=none,format=raw"
 	case $3 in
 		arch)		vm_rtc= ;;
-		win)		vm_rtc="-rtc base=localtime" ;;
-		win-install)	vm_rtc="-rtc base=localtime"
+		win)		vm_rtc="-rtc base=localtime,clock=rt,driftfix=slew" ;;
+		win-install)	vm_rtc="-rtc base=localtime,clock=rt,driftfix=slew"
 				vm_tmpdisk=/tmp/tmp.img
 				vm_disk="-hda /dev/mapper/$vm_name -drive file=$vm_tmpdisk,if=virtio,media=disk,format=qcow2"
 				qemu-img create -f qcow2 $vm_tmpdisk 32M
@@ -50,12 +50,14 @@ function f_run {
 
 	vm_switch=br0
 	vm_tap=tap_$vm_name
-	vm_net="-net nic,model=virtio -net tap,ifname=$vm_tap,script=no,downscript=no"
+	vm_mac=$(md5sum <<< $vm_name | sed 's/\(..\)/\1 /g' | awk '{printf "00:16:3e:%s:%s:%s", $1, $2, $3}')
+	vm_net="-net nic,macaddr=$vm_mac,model=virtio -net tap,ifname=$vm_tap,script=no,downscript=no"
 
 	echo 'initializing resources ...'
 	sudo $0 _init $vm_vg $vm_name $vm_switch $vm_tap
 
 	qemu-kvm \
+		-machine type=pc-1.1,accel=kvm,kernel_irqchip=off \
 		-cpu host \
 		$vm_disk \
 		$vm_cdrom \
@@ -63,17 +65,20 @@ function f_run {
 		-mem-path /dev/hugepages \
 		-mem-prealloc \
 		-k en-us \
+		-balloon none \
 		-vga vmware \
 		-vnc 127.0.0.1:$vm_index,lossy \
-		-no-hpet \
 		$vm_net \
 		-serial none \
 		-parallel none \
 		-monitor telnet:127.0.0.1:$((5800+vm_index)),server,nowait \
 		-S \
 		-D /tmp/kvm-$vm_name.log \
+		-enable-kvm \
 		-daemonize \
 		$vm_rtc
+#		-no-kvm-pit-reinjection
+#		-global kvm-pit.lost_tick_policy=discard
 }
 
 function f_init {
@@ -102,4 +107,3 @@ function f_main {
 }
 
 f_main $*
-

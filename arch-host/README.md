@@ -75,6 +75,8 @@ Can also delete the search statements from grub.cfg.
 
 ## base-devel
 
+## cifs-utils
+
 ## dnsutils
 
 ## fortune-mod
@@ -95,6 +97,8 @@ Can also delete the search statements from grub.cfg.
 ## openssh
 
 1. Add sshd to DAEMONS list in /etc/rc.conf
+
+## parted
 
 ## pkgfile
 
