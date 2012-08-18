@@ -90,4 +90,35 @@ the Linux version.
 # Configuration
 
 * change IEUser to standard user; update passwords
+* remove programs:
+	* Virtual PC Integration Components
+* remove features:
+	* Media Features
+	* Print and Document Services
+		* Internet Printing Client
+		* Windows Fax and Scan
+	* Tablet PC Components
+	* Windows Gadget Platform
+	* XPS Services
+* disable all power options
+* disable aero theme
+* disable services:
+	* Computer Browser
+	* Function Discovery Resource Publication
+	* IP Helper
+	* Offline Files
+	* Security Center
+	* Shell Hardware Detection
+	* SSDP Discovery
+	* Themes
+	* Windows Audio
+	* Windows Audio Endpoint Builder
+	* WinHTTP Web Proxy Auto-Discovery Service
+* free up disk space:
+	* powercfg -h off
+	* cleanmgr sageset:99
+	* dism /online /cleanup-image /spsuperseded
+* enable remote desktop:
+	HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Control/Terminal Server/fDenyTSConnections = 0
+* disable ipv4
 
