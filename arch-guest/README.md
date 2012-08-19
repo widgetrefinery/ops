@@ -103,7 +103,8 @@
 * dhclient
 
 	1. Install custom dhclient to /etc/rc.d/dhclient
-	2. Add dhclient to DAEMONS list in /etc/rc.conf
+	2. Install custom dhclient.conf to /etc/dhclient.conf
+	3. Add dhclient to DAEMONS list in /etc/rc.conf
 
 * login.defs
 

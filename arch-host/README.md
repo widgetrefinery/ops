@@ -183,6 +183,7 @@ Install network-guest/bridge.conf to /etc/qemu/bridge.conf
 2. Install network-guest/named.zone to /var/named/named.zone
 3. Install network-guest/named.reverse to /var/named/named.reverse
 4. Add named to DAEMONS list in /etc/rc.conf
+5. chmod 770 /var/named
 
 ## dhcpd
 
@@ -222,7 +223,8 @@ Install network-guest/bridge.conf to /etc/qemu/bridge.conf
 	sudo pacman -U totd-1.5.1-4-i686.pkg.tar.xz
 
 2. Install network-guest/totd.conf to /etc/totd.conf
-3. Add totd to DAEMONS list in /etc/rc.conf
+3. Set forwarder in /etc/totd.conf to desired dns server
+4. Add totd to DAEMONS list in /etc/rc.conf
 
 # GUI
 
