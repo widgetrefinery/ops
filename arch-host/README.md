@@ -1,6 +1,6 @@
-# Installation
+# Allocate lvm
 
-## /
+* /
 
 	dd if=/dev/zero of=/dev/sda
 	mdadm --create --metadata=1.1 --homehost=$HOSTNAME --raid-devices=2 --level=1 /dev/md0 /dev/sda missing
@@ -13,55 +13,65 @@
 	mke2fs -t ext4 /dev/mapper/$HOSTNAME
 	mount /dev/mapper/$HOSTNAME /mnt
 
-## /boot
+* /boot
 
-	parted /dev/sdc mklabel gpt
-	parted /dev/sdc mkpart primary 2048s 20479s	#512B sectors; ~10MB partition
-	parted /dev/sdc mkpart primary 20480s -1s	#rest of drive
-	parted /dev/sdc set 1 bios_grub on
+	parted /dev/sdc
+		mklabel gpt
+		mkpart primary 2048s 20479s	#512B sectors; ~10MB partition
+		mkpart primary 20480s -1s	#rest of drive
+		set 1 bios_grub on
 	mke2fs -t ext2 /dev/sdc2
 	mkdir /mnt/boot
 	mount /dev/sdc2 /mnt/boot
 
-## pacstrap base
+# Install OS
 
-Modify pacstrap so we can customize the modules to install:
+1. Install base system, skipping the following modules, using: pacstrap -i /mnt base
 
-	sed -i 's/ --noconfirm / /' /usr/bin/pacstrap
+	* ^19 - heirloop-mailx
+	* ^23 - jfsutils
+	* ^32 - nano
+	* ^35 - pcmciautils
+	* ^37 - ppp
+	* ^40 - reiserfsprogs
+	* ^53 - wpa_supplicant
+	* ^54 - xfsprogs
 
-Skip installing the following modules:
+2. Install grub using: pacstrap /mnt grub-bios
 
-* ^19 - heirloop-mailx
-* ^23 - jfsutils
-* ^35 - pcmciautils
-* ^37 - ppp
-* ^40 - reiserfsprogs
-* ^53 - wpa_supplicant
-* ^54 - xfsprogs
+3. Configure os:
 
-## mdadm.conf
-
+	genfstab -p /mnt >> /mnt/etc/fstab
+	arch-chroot /mnt
+	echo $HOSTNAME > /etc/hostname
+	ln -fns /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
+	echo 'LANG="en_US.UTF-8"' > /etc/locale.conf
+	vi /etc/locale.get #enable relevant locales
+	locale-gen
 	mdadm --detail --scan >> /mnt/etc/mdadm.conf
+	vi /etc/mkinitcpio.conf
+		# add video driver (i915) to MODULES list
+		# i.e. MODULES="i915"
+		# add mdadm_udev, lvm2, encrypt to HOOKS list
+		# i.e. HOOKS="base udev autodetect pata scsi sata mdadm_udev lvm2 usbinput encrypt filesystems fsck"
+	mkinitcpio -p linux
+	passwd #set root password
 
-## mkinitcpio.conf
-
-Add video driver to MODULES:
-
-	MODULES="i915"
-
-Add mdadm_udev, lvm2, encrypt to HOOKS:
-
-	HOOKS="base udev autodetect pata scsi sata mdadm_udev lvm2 usbinput encrypt filesystems fsck"
-
-## grub2
+4. Configure grub:
 
 	grub-mkconfig -o /boot/grub/grub.cfg
 	grub-install /dev/sdc
 	rm -f /boot/grub/grub.cfg.example
-	sed -i "s/set root=.*$/set root='hd0,gpt2'/" /boot/grub/grub.cfg
-	sed -i '/vmlinuz-linux/ s!$! cryptdevice=/dev/mapper/vg0-$HOSTNAME:$HOSTNAME!' /boot/grub/grub.cfg
+	vi /boot/grub/grub.cfg
+		# change "set root='hd2,gpt2'" to "set root='hda0,gpt2'"
+		# add "cryptdevice=/dev/mapper/vg0-$HOSTNAME:$HOSTNAME" to linux command
+		# remove search statements
 
-Can also delete the search statements from grub.cfg.
+5. Cleanup:
+
+	exit #out of chroot
+	umount /mnt/boot /mnt
+	reboot
 
 ## Resources
 
@@ -71,160 +81,156 @@ Can also delete the search statements from grub.cfg.
 * [[Solved] Pure UEFI GRUB2 LVM2 on LUKS encrypted GPT 3xSSD RAID0](https://bbs.archlinux.org/viewtopic.php?id=126502)
 * [Kernel Mode Setting](https://wiki.archlinux.org/index.php/KMS#Disabling_modesetting)
 
-# Core Apps
+# OS Configuration
 
-## base-devel
+* agetty
 
-## cifs-utils
+	1. Replace /etc/issue:
 
-## dnsutils
+		echo -e '[\l]\n' > /etc/issue
 
-## fortune-mod
+	2. Reduce the number of terminals in /etc/inittab to 3.
 
-1. Install etc/fortune-motd to /etc/cron.hourly/fortune-motd
-2. Remove pam_motd.so from /etc/pam.d/system-login
+* bash
 
-## mlocate
+	1. Replace /etc/bash.bashrc with custom bash.bashrc
+	2. Remove PS1 from /etc/skel/.bashrc
+	3. Add "alias vi=vim" to /etc/skel/.bashrc
+	4. Add "cat /etc/motd" to /etc/skel/.bashrc
 
-1. Run updatedb
+* disable ipv6
 
-## nmap
+	echo 'net.ipv6.conf.eth0.disable_ipv6 = 1' >> /etc/sysctl.conf
+	echo noipv6rs >> /etc/dhcpcd.conf
 
-## ntp
+* login.defs
 
-1. Add ntpd to DAEMONS list in /etc/rc.conf
+	1. Add 'CREATE_HOME yes' to /etc/login.defs
+	2. Add 'MOTD_FILE' to /etc/login.defs
 
-## openssh
+# Core Software
 
-1. Add sshd to DAEMONS list in /etc/rc.conf
+Run "pacman -Syy" first to update database before installing.
 
-## parted
+* base-devel
+* dnsutils
+* fortune-mod
 
-## pkgfile
+	cat > /etc/cron.hourly/fortune-motd << 'EOF'
+	#!/bin/sh
+	/usr/bin/fortune computers cookie definitions linux magic startrek | sed -e '1i\\' -e '$a\\' > /etc/motd
+	EOF
+	chmod 755 /etc/cron.hourly/fortune-motd
+	/etc/cron.hourly/fortune-motd
+	sed -i '/pam_motd\.so/d' /etc/pam.d/system-login
 
-## screen
+* iptables
 
-1. Uncomment "startup_message off" in /etc/screenrc
+	1. Install etc/iptables.rules to /etc/iptables/iptables.rules.
+	2. Add iptables to DAEMONS list in /etc/rc.conf
 
-## sudo
+* mlocate
 
-1. Add the following to /etc/sudoers:
+	updatedb
 
+* nmap
+* ntp
+
+	1. Add ntpd to DAEMONS list in /etc/rc.conf
+
+* openssh
+
+	1. Add sshd to DAEMONS list in /etc/rc.conf
+
+* parted
+* pkgfile
+
+	pkgfile --update
+
+* screen
+
+	1. Uncomment "startup_message off" in /etc/screenrc
+
+* sudo
+
+	cat >> /etc/sudoers << 'EOF'
 	Defaults timestamp_timeout=0
 	%wheel ALL=(ALL) ALL
+	EOF
 
-## traceroute
-
-## vim
-
-1. Create /etc/skel/.vimrc:
+* traceroute
+* vim
 
 	cp /usr/share/vim/vim73/vimrc_example.vim /etc/skel/.vimrc
 	echo 'set viminfo=""' >> /etc/skel/.vimrc
 	sed -i 's/\(set backup\)/"\1/' /etc/ske/.vimrc
-
-# OS Tweaks
-
-## agetty
-
-1. Replace /etc/issue:
-
-	echo -e '[\l]\n' > /etc/issue
-
-2. Reduce the number of terminals in /etc/inittab to 3.
-
-## bash
-
-1. Replace /etc/bash.bashrc with custom bash.bashrc
-2. Remove PS1 from /etc/skel/.bashrc
-3. Add "alias vi=vim" to /etc/skel/.bashrc
-
-## login.defs
-
-1. Add 'CREATE_HOME yes' to /etc/login.defs
-
-# Host Networking
-
-## disable ipv6
-
-1. Disable ipv6 on eth0:
-	echo 'net.ipv6.conf.eth0.disable_ipv6 = 1' >> /etc/sysctl.conf
-
-2. Disable ipv6 solicitation in dhcpcd:
-	echo noipv6rs >> /etc/dhcpcd.conf
-
-## iptables
-
-1. Install etc/iptables.rules to /etc/iptables/iptables.rules.
-2. Add iptables to DAEMONS list in /etc/rc.conf
+	mkdir /etc/skel/.vim
+	cat > /etc/skel/.vim/.netrwhist << 'EOF'
+	let g:netrw_dirhistmax  =0
+	let g:netrw_dirhist_cnt =0
+	EOF
 
 # Guest Networking
 
-## Get ipv6 Prefix
+* Enable packet forwarding:
 
-[simple dns plus](www.simpledns.com/private-ipv6.aspx)
+	1. Change "net.ipv4.ip_forward = 0" to "net.ipv4.ip_forward = 1" in /etc/sysctl.conf
+	2. Change "net.ipv6.conf.all.forwarding = 0" to "net.ipv6.conf.all.forwarding = 1" in /etc/sysctl.conf
+	3. Reload kernel parameters: sysctl -p
 
-## Enable Packet Forwarding
+* Allow qemu to use bridge br0:
 
-1. Edit /etc/sysctl.conf:
+	echo 'allow br0' > /etc/qemu/bridge.conf
 
-	uncomment "net.ipv4.ip_forward = 1"
-	uncomment "net.ipv6.conf.all.forwarding = 1"
+* Install and configure bind:
 
-2. Reload kernel parameters via "sysctl -p"
+	1. Install network-guest/named.conf to /etc/named.conf
+	2. Install network-guest/named.zone to /var/named/named.zone
+	3. Install network-guest/named.reverse to /var/named/named.reverse
+	4. Add named to DAEMONS list in /etc/rc.conf
+	5. chmod 770 /var/named
 
-## bridge.conf
+* Install and configure dhcp:
 
-Install network-guest/bridge.conf to /etc/qemu/bridge.conf
+	1. Install network-guest/dhcpd.conf to /etc/dhcpd.conf
+	2. Add dhcp6 to DAEMONS list in /etc/rc.conf
 
-## bind
+* Install and configure kvm-network:
 
-1. Install network-guest/named.conf to /etc/named.conf
-2. Install network-guest/named.zone to /var/named/named.zone
-3. Install network-guest/named.reverse to /var/named/named.reverse
-4. Add named to DAEMONS list in /etc/rc.conf
-5. chmod 770 /var/named
+	1. Install bridge-utils
+	1. Install network-guest/kvm-network.sh to /etc/rc.d/kvm-network
+	2. Add kvm-network to DAEMONS list in /etc/rc.conf
 
-## dhcpd
+* Install and configure radvd:
 
-1. Install network-guest/dhcpd.conf to /etc/dhcpd.conf
-2. Add dhcp6 to DAEMONS list in /etc/rc.conf
+	1. Install network-guest/radvd.conf to /etc/radvd.conf
+	2. Add radvd to DAEMONS list in /etc/rc.conf
 
-## kvm-network
+* Install and configure tayga:
 
-1. Install network-guest/kvm-network.sh to /etc/rc.d/kvm-network
-2. Add kvm-network to DAEMONS list in /etc/rc.conf
+	1. Compile and install tayga 0.9.2-1 from aur:
 
-## radvd
+		wget http://aur.archlinux.org/packages/ta/tayga/tayga.tar.gz
+		tar -xf tayga.tar.gz
+		cd tayga
+		makepkg
+		sudo pacman -U tayga-0.9.2-1-i686.pkg.tar.xz
 
-1. Install network-guest/radvd.conf to /etc/radvd.conf
-2. Add radvd to DAEMONS list in /etc/rc.conf
+	2. Install network-guest/tayga.conf to /etc/tayga.conf
 
-## tayga 0.9.2-1
+* Install and configure totd:
 
-1. Install from aur:
+	1. Compile and install totd 1.5.1-4 from aur:
 
-	wget http://aur.archlinux.org/packages/ta/tayga/tayga.tar.gz
-	tar -xf tayga.tar.gz
-	cd tayga
-	makepkg
-	sudo pacman -U tayga-0.9.2-1-i686.pkg.tar.xz
+		wget http://aur.archlinux.org/packages/to/totd/totd.tar.gz
+		tar -xf totd.tar.gz
+		cd totd
+		makepkg
+		sudo pacman -U totd-1.5.1-4-i686.pkg.tar.xz
 
-2. Install network-guest/tayga.conf to /etc/tayga.conf
-
-## totd 1.5.1-4
-
-1. Install from aur:
-
-	wget http://aur.archlinux.org/packages/to/totd/totd.tar.gz
-	tar -xf totd.tar.gz
-	cd totd
-	makepkg
-	sudo pacman -U totd-1.5.1-4-i686.pkg.tar.xz
-
-2. Install network-guest/totd.conf to /etc/totd.conf
-3. Set forwarder in /etc/totd.conf to desired dns server
-4. Add totd to DAEMONS list in /etc/rc.conf
+	2. Install network-guest/totd.conf to /etc/totd.conf
+	3. Set forwarder in /etc/totd.conf to desired dns server
+	4. Add totd to DAEMONS list in /etc/rc.conf
 
 # GUI
 
@@ -275,13 +281,23 @@ Install network-guest/bridge.conf to /etc/qemu/bridge.conf
 * xautolock
 * xterm
 
+## NX Server
+
+1. Install freenx
+2. Install xdialog
+3. Edit /etc/nxserver/node.conf and add AGENT_EXTRA_OPTIONS_X="-norender"
+
+## NX Client
+
+1. Install client from [nomachine](http://www.nomachine.com)
+2. Copy the client key from /var/lib/nxserver/home/nx/.ssh/client.id_dsa.key to your desktop.
+3. Start the nx client and import the key
+4. Choose custom desktop, use "/usr/bin/i3" as the application, choose a new virtual desktop
+5. Exit using ctrl+alt+t
+
 # KVM
 
-* bind
-* bridge-utils
-* dncp
 * qemu-kvm
-* radvd
 * tigervnc
 * uml_utilities
 
@@ -296,29 +312,4 @@ Install network-guest/bridge.conf to /etc/qemu/bridge.conf
 	echo 140 > /proc/sys/vm/nr_hugepages
 9. If all goes well add it to /etc/sysctl.conf:
 	vm.nr_hugepages = 140
-
-## Windows VM
-
-1. Create a partition for the primary hdd:
-
-	lvcreate -L16G -n $VM_HOSTNAME vg0
-	cryptsetup luksFormat --use-random /dev/vg0/$VM_HOSTNAME
-	cryptsetup luksOpen /dev/vg0/$VM_HOSTNAME $VM_HOSTNAME
-	dd if=/dev/zero of=/dev/mapper/$VM_HOSTNAME
-
-2. Boot up the vm and install the os:
-
-	./win_vm.sh $VM_HOSTNAME 1 os /path/to/win.iso
-	vncviewer localhost:5901 &
-	telnet localhost 5801 #enter c to start the vm
-
-3. Install [virtio drivers](http://www.linux-kvm.org/page/WindowsGuestDrivers/Download_Drivers)
-
-4. Install [dibbler](http://klub.com.pl/dhcpv6/#DOWNLOAD)
-
-## Switching cdrom iso
-
-	ctrl+alt+2 (to switch to monitor console if using sdl)
-	info block (to display current block devices)
-	change ide1-cd0 /path/to/iso (mount iso)
 
