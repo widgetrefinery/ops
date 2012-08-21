@@ -90,7 +90,7 @@ function f_init {
 		cryptsetup luksOpen /dev/$vm_vg/$vm_name $vm_name
 	fi
 	if [ ! -e /proc/net/dev_snmp6/$vm_tap ]; then
-	        tunctl -u $SUDO_UID -t $vm_tap
+	        ip tuntap add mode tap user $SUDO_UID $vm_tap
 	fi
 	ip link set $vm_tap up
 	if ! brctl show $vm_switch | grep -q $vm_tap; then
