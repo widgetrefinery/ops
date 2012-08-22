@@ -81,31 +81,7 @@
 * [[Solved] Pure UEFI GRUB2 LVM2 on LUKS encrypted GPT 3xSSD RAID0](https://bbs.archlinux.org/viewtopic.php?id=126502)
 * [Kernel Mode Setting](https://wiki.archlinux.org/index.php/KMS#Disabling_modesetting)
 
-# OS Configuration
-
-* agetty
-
-	1. Replace `/etc/issue`: `echo -e '[\l]\n' > /etc/issue`
-	2. Reduce the number of terminals in `/etc/inittab` to 3.
-
-* bash
-
-	1. Replace `/etc/bash.bashrc` with custom `bash.bashrc`
-	2. Remove `PS1` from `/etc/skel/.bashrc`
-	3. Add `alias vi=vim` to `/etc/skel/.bashrc`
-	4. Add `cat /etc/motd` to `/etc/skel/.bashrc`
-
-* disable ipv6
-
-	1. Add `net.ipv6.conf.eth0.disable_ipv6 = 1` to `/etc/sysctl.conf`
-	2. Add `noipv6rs` to `/etc/dhcpcd.conf`
-
-* login.defs
-
-	1. Add `CREATE_HOME yes` to `/etc/login.defs`
-	2. Add `MOTD_FILE` to `/etc/login.defs`
-
-# Core Software
+# Additional Software
 
 Run `pacman -Syy` first to update the database before installing.
 
@@ -171,6 +147,30 @@ Run `pacman -Syy` first to update the database before installing.
 		let g:netrw_dirhistmax  =0
 		let g:netrw_dirhist_cnt =0
 		EOF
+
+# OS Configuration
+
+* agetty
+
+	1. Replace `/etc/issue`: `echo -e '[\l]\n' > /etc/issue`
+	2. Reduce the number of terminals in `/etc/inittab` to 3.
+
+* bash
+
+	1. Install `bash.bashrc` to `/etc/bash.bashrc`
+	2. Remove `PS1` from `/etc/skel/.bashrc`
+	3. Add `alias vi=vim` to `/etc/skel/.bashrc`
+	4. Add `cat /etc/motd` to `/etc/skel/.bashrc`
+
+* disable ipv6
+
+	1. Add `net.ipv6.conf.eth0.disable_ipv6 = 1` to `/etc/sysctl.conf`
+	2. Add `noipv6rs` to `/etc/dhcpcd.conf`
+
+* login.defs
+
+	1. Add `CREATE_HOME yes` to `/etc/login.defs`
+	2. Add `MOTD_FILE` to `/etc/login.defs`
 
 # GUI
 

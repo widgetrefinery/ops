@@ -5,108 +5,119 @@
 	cryptsetup luksOpen /dev/vg0/$VM_HOSTNAME $VM_HOSTNAME
 	dd if=/dev/zero of=/dev/mapper/$VM_HOSTNAME
 
-# Boot up VM and install OS
+# Boot Up VM and Install OS
 
-1. Setup disks:
+1. Setup disk:
 
-	parted /dev/vda
-		mklabel gpt
-		mkpart primary 2048s 20479s	#512B sectors; ~10MB partition
-		mkpart primary 20480s -1s	#rest of drive
-		set 1 bios_grub on
-	mke2fs -t ext4 /dev/vda2
-	mount /dev/vda2 /mnt
+		parted /dev/vda
+			mklabel gpt
+			mkpart primary 2048s 20479s	#512B sectors; ~10MB partition
+			mkpart primary 20480s -1s	#rest of drive
+			set 1 bios_grub on
+		mke2fs -t ext4 /dev/vda2
+		mount /dev/vda2 /mnt
 
-2. Enable networking:
+2. Disable dhcpcd using: `dhcpcd -k`
 
-	dhclient -6 eth0
+3. Enable dhclient using: `dhclient -6 eth0`
 
-3. Install OS:
+4. Edit `/etc/pacman.d/mirrorlist` to suit
 
-	sed -i 's/ --noconfirm / /' /usr/bin/pacstrap
-	vi /etc/pacman.d/mirrorlist #modify mirror list to suit
-	pacstrap /mnt base
-	pacstrap /mnt grub-bios
-	pacstrap /mnt dhclient
+5. Install base system, skipping the following modules, using: `pacstrap -i /mnt base`
 
-4. Configure OS:
+	* ^19 - heirloop-mailx
+	* ^23 - jfsutils
+	* ^32 - nano
+	* ^35 - pcmciautils
+	* ^37 - ppp
+	* ^40 - reiserfsprogs
+	* ^52 - wpa_supplicant
+	* ^53 - xfsprogs
 
-	genfstab -p /mnt >> /mnt/etc/fstab
-	arch-chroot /mnt
-	echo $VM_HOSTNAME > /etc/hostname
-	ln -fns /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
-	echo 'LANG="en_US.UTF-8"' > /etc/locale.conf
-	vi /etc/locale.gen #enable relevant locales
-	locale-gen
-	vi /etc/mkinitcpio.conf #add virtio, virtio_pci, virtio_blk, virtio_net, and virtio_rng to MODULES list
-	mkinitcpio -p linux
-	vi /etc/rc.conf #remove network from list of DAEMONS
-	echo 'dhclient -6 eth0' >> /etc/rc.local
-	passwd #set root password
+6. Install grub and dhclient using: `pacstrap /mnt grub-bios dhclient`
 
-5. Configure grub:
+7. Configure os:
 
-	grub-mkconfig -o /boot/grub/grub.cfg
-	grub-install /dev/vda
-	rm -f /boot/grub/grub.cfg.example
+		genfstab -p /mnt >> /mnt/etc/fstab
+		arch-chroot /mnt
+		echo $VM_HOSTNAME > /etc/hostname
+		ln -fns /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
+		echo 'LANG="en_US.UTF-8"' > /etc/locale.conf
+		vi /etc/locale.gen #enable relevant locales
+		locale-gen
+		vi /etc/mkinitcpio.conf
+			#add virtio modules to MODULES list
+			#i.e. MODULES="virtio virtio_pci virtio_blk virtio_net virtio_rng"
+		mkinitcpio -p linux
+		vi /etc/rc.conf #remove network from list of DAEMONS
+		echo 'dhclient -6 eth0' >> /etc/rc.local
+		passwd #set root password
 
-6. Cleanup:
+8. Configure grub:
 
-	exit #out of chroot
-	umount /mnt
-	reboot
+		grub-mkconfig -o /boot/grub/grub.cfg
+		grub-install /dev/vda
+		rm -f /boot/grub/grub.cfg.example
+
+9. Cleanup:
+
+		exit #out of chroot
+		umount /mnt
+		reboot
 
 # Additional Software
 
+Run `pacman -Syy` first to update the database before installing.
+
 * dnsutils
+
 * mlocate
 
-	updatedb
+		updatedb
 
 * nmap
+
 * openssh
 
-	1. Add sshd to DAEMONS list in /etc/rc.conf
+	1. Add `sshd` to `DAEMONS` list in `/etc/rc.conf`
 
 * sudo
 
-	1. Add the following to /etc/sudoers:
-
+		cat >> /etc/sudoers << 'EOF'
 		Defaults timestamp_timeout=0
 		%wheel ALL=(ALL) ALL
+		EOF
 
 * vim
 
-	cp /usr/share/vim/vim73/vimrc_example.vim /etc/skel/.vimrc
-	echo 'set viminfo=""' >> /etc/skel/.vimrc
-	sed -i 's/\(set backup\)/"\1/' /etc/ske/.vimrc
-	mkdir /etc/skel/.vim
-	echo 'let g:netrw_dirhistmax  =0' >  /etc/skel/.vim/.netrwhist
-	echo 'let g:netrw_dirhist_cnt =0' >> /etc/skel/.vim/.netrwhist
+		cp /usr/share/vim/vim73/vimrc_example.vim /etc/skel/.vimrc
+		echo 'set viminfo=""' >> /etc/skel/.vimrc
+		sed -i 's/\(set backup\)/"\1/' /etc/ske/.vimrc
+		mkdir /etc/skel/.vim
+		echo 'let g:netrw_dirhistmax  =0' >  /etc/skel/.vim/.netrwhist
+		echo 'let g:netrw_dirhist_cnt =0' >> /etc/skel/.vim/.netrwhist
 
-# Configuration
+# OS Configuration
 
 * agetty
 
-	1. Replace /etc/issue:
-
-		echo -e '[\l]\n' > /etc/issue
-
-	2. Reduce the number of terminals in /etc/inittab to 3.
+	1. Replace `/etc/issue`: `echo -e '[\l]\n' > /etc/issue`
+	2. Reduce the number of terminals in `/etc/inittab` to 3.
 
 * bash
 
-	1. Install custom bash.bashrc from arch-host to /etc/bash.bashrc
-	2. Remove PS1 from /etc/skel/.bashrc
-	3. Add "alias vi=vim" to /etc/skel/.bashrc
+	1. Install `bash.bashrc` from arch-host to `/etc/bash.bashrc`
+	2. Remove `PS1` from `/etc/skel/.bashrc`
+	3. Add `alias vi=vim` to `/etc/skel/.bashrc`
 
 * dhclient
 
-	1. Install custom dhclient to /etc/rc.d/dhclient
-	2. Install custom dhclient.conf to /etc/dhclient.conf
-	3. Add dhclient to DAEMONS list in /etc/rc.conf
+	1. Install `etc/dhclient.init` to `/etc/rc.d/dhclient`
+	2. Install `etc/dhclient.conf` to `/etc/dhclient.conf`
+	3. Add `dhclient` to `DAEMONS` list in `/etc/rc.conf`
+	4. Remove `dhclient ...` from `/etc/rc.local`
 
 * login.defs
 
-	1. Add 'CREATE_HOME yes' to /etc/login.defs
+	1. Add `CREATE_HOME yes` to `/etc/login.defs`
 
