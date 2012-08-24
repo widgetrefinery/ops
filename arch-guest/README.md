@@ -121,3 +121,64 @@ Run `pacman -Syy` first to update the database before installing.
 
 	1. Add `CREATE_HOME yes` to `/etc/login.defs`
 
+* ssl certificate
+
+		openssl genrsa -out /etc/ssl/private/server.key 1024
+		chmod 440 /etc/ssl/private/server.key
+		openssl req -new -x509 -out /etc/ssl/certs/server.crt -key /etc/ssl/private/server.key -days 3650
+
+# Email Services
+
+## postfix
+
+1. Add or modify the following in `/etc/postfix/main.cf`:
+
+		mydestination = 
+		mynetworks_style = host
+		virtual_mailbox_domains = regexp:/etc/postfix/vdomains
+		virtual_mailbox_base = /var/postfix/
+		virtual_mailbox_maps = hash:/etc/postfix/vmailbox, regexp:/etc/postfix/vmailbox-catchall
+		virtual_minimum_uid = 99	# 99 is uid of nobody
+		virtual_uid_maps = static:99
+		virtual_gid_maps = static:99
+		inet_protocols = ipv6
+
+2. Create `/etc/postfix/vdomains` to route all recipients to the local machine:
+
+		/.+/ true
+
+3. Create `/etc/postfix/vmailbox` to map desired test accounts:
+
+		testuser1@mydomain.org	testuser1/
+		testuser2@mydomain.org	testuser2/
+
+4. Create `/etc/postfix/vmailbox-catchall` to route all other messages to a catchall account:
+
+		/.+/ catchall/
+
+5. Update the virtual mailbox databases.
+
+		postmap /etc/postfix/vdomains
+		postmap /etc/postfix/vmailbox
+		postmap /etc/postfix/vmailbox-catchall
+
+6. Create the `/var/postfix` dir and make it owned by nobody:
+
+		install -o nobody -g nobody -m 0775 -d /var/postfix
+
+7. Add `postfix` to the `DAEMONS` list in `/etc/rc.conf`
+
+## dovecot
+
+1. Install `etc/dovecot.conf` to `/etc/dovecot.conf`
+
+2. Create `/etc/dovecot/users`:
+
+		testuser1:{passwd}
+		testuser2:{passwd}
+		catchall:{passwd}
+
+3. Generate the hashed password using: `doveadm pw -s ssha512`
+
+4. Add `dovecot` to the `DAEMONS` list in `/etc/rc.conf`
+
