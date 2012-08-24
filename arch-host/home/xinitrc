@@ -2,4 +2,8 @@
 autocutsel -fork &
 autocutsel -selection PRIMARY -fork &
 xautolock -time 10 -locker "i3lock -c 000000" &
-exec i3
+if [ -z "${NXSESSIONID:-}" ]; then
+	exec i3 -c ~/.i3/i3.conf
+else
+	exec i3 -c ~/.i3/i3-nx.conf
+fi

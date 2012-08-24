@@ -209,10 +209,12 @@ Configuration:
 
 Configuration:
 
-1. Install `home/i3.conf` to `/etc/skel/.i3/config`
-2. Install `home/i3status.conf` to `/etc/skel/.i3/i3status.conf`
-3. Install `home/xinitrc` to `/etc/skel/.xinitrc`
-4. Install `home/Xdefaults` to `/etc/skel/.Xdefaults`
+1. Install `home/i3.conf` to `/etc/skel/.i3/i3.conf`
+2. Install `home/i3.conf` to `/etc/skel/.i3/i3-nx.conf`
+3. Modify `/etc/skel/.i3/i3-nx.conf`, changing the `$mod` variable from `Mod4` to `Mod1`
+3. Install `home/i3status.conf` to `/etc/skel/.i3/i3status.conf`
+4. Install `home/xinitrc` to `/etc/skel/.xinitrc`
+5. Install `home/Xdefaults` to `/etc/skel/.Xdefaults`
 
 ## Desktop Apps
 
