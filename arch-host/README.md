@@ -160,7 +160,6 @@ Run `pacman -Syy` first to update the database before installing.
 	1. Install `bash.bashrc` to `/etc/bash.bashrc`
 	2. Remove `PS1` from `/etc/skel/.bashrc`
 	3. Add `alias vi=vim` to `/etc/skel/.bashrc`
-	4. Add `cat /etc/motd` to `/etc/skel/.bashrc`
 
 * disable ipv6
 
@@ -170,7 +169,6 @@ Run `pacman -Syy` first to update the database before installing.
 * login.defs
 
 	1. Add `CREATE_HOME yes` to `/etc/login.defs`
-	2. Add `MOTD_FILE` to `/etc/login.defs`
 
 # GUI
 
@@ -298,6 +296,10 @@ Configuration:
 	3. Install `guest-networking/named.reverse` to `/var/named/named.reverse`
 	4. Add `named` to `DAEMONS` list in `/etc/rc.conf`
 	5. `chmod 770 /var/named`
+	6. Create `/etc/resolve.conf.head`:
+
+			search <domainname>
+			nameserver ::1
 
 * Install and configure dhcp:
 
