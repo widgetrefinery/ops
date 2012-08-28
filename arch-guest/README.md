@@ -129,7 +129,7 @@ Run `pacman -Syy` first to update the database before installing.
 
 # Email Services
 
-## postfix
+## Postfix
 
 1. Add or modify the following in `/etc/postfix/main.cf`:
 
@@ -156,7 +156,7 @@ Run `pacman -Syy` first to update the database before installing.
 
 		/.+/ catchall/
 
-5. Update the virtual mailbox databases.
+5. Update the postfix databases.
 
 		postmap /etc/postfix/vdomains
 		postmap /etc/postfix/vmailbox
@@ -168,7 +168,7 @@ Run `pacman -Syy` first to update the database before installing.
 
 7. Add `postfix` to the `DAEMONS` list in `/etc/rc.conf`
 
-## dovecot
+## Dovecot
 
 1. Install `etc/dovecot.conf` to `/etc/dovecot.conf`
 
@@ -181,4 +181,37 @@ Run `pacman -Syy` first to update the database before installing.
 3. Generate the hashed password using: `doveadm pw -s ssha512`
 
 4. Add `dovecot` to the `DAEMONS` list in `/etc/rc.conf`
+
+## Attachment Extractor
+
+* perl-mime-tools
+* bin/save-attachments.pl
+
+Configuration:
+
+1. Add or modify the following in `/etc/postfix/main.cf`:
+
+		mydestination = localhost.localdomain
+		virtual_alias_maps = hash:/etc/postfix/valiases
+
+2. Modify `/etc/postfix/vdomains` to exclude `localhost.localdomain`:
+
+		!/^localhost\.localdomain$/ true
+
+3. Create `/etc/postfix/valiases` to forward specific recipients to special mailboxes:
+
+		testuser1@mydomain.org	testuser1@archive.mydomain.org testuser1@localhost.localdomain
+
+4. Modify `/etc/postfix/vmailboxes` to save the original messages to disk:
+
+		testuser1@archive.mydomain.org testuser1/
+
+5. Modify `/etc/postfix/alias` to filter specific recipients through the extractor script:
+
+		testuser1: "|/usr/bin/perl /usr/local/bin/save-attachments.pl /attachment/dir /db.file"
+
+6. Update the postfix databases.
+
+		newaliases
+		postmap /etc/postfix/valiases
 
