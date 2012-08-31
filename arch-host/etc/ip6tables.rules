@@ -1,0 +1,34 @@
+*filter
+:INPUT		DROP [0:0]
+:FORWARD	DROP [0:0]
+:OUTPUT		DROP [0:0]
+
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -p tcp --dport 22 -j ACCEPT
+-A INPUT -i br0 -p ipv6-icmp                   -j ACCEPT
+-A INPUT -i br0 -p tcp             --dport  53 -j ACCEPT -m comment --comment "dns"
+-A INPUT -i br0 -p udp             --dport  53 -j ACCEPT -m comment --comment "dns"
+-A INPUT -i br0 -p udp --sport 546 --dport 547 -j ACCEPT -m comment --comment "dhcp"
+-A INPUT -j LOG --log-prefix "Dropped ipv6 input packet "
+
+-A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A FORWARD -i br0 -o nat64 -p tcp --dport 80 -j ACCEPT -m comment --comment "enabled for running pacman in vm"
+-A FORWARD -j LOG --log-prefix "Dropped ipv6 forward packet "
+
+-A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A OUTPUT -o lo -j ACCEPT
+-A OUTPUT -p ipv6-icmp       -j ACCEPT
+-A OUTPUT -p tcp --dport  22 -j ACCEPT
+-A OUTPUT -p tcp --dport  53 -j ACCEPT -m comment --comment "dns"
+-A OUTPUT -p udp --dport  53 -j ACCEPT -m comment --comment "dns"
+-A OUTPUT -p tcp --dport  80 -j ACCEPT
+-A OUTPUT -p udp --dport 123 -j ACCEPT -m comment --comment "ntp"
+-A OUTPUT -p tcp --dport 443 -j ACCEPT
+-A OUTPUT -p tcp --dport 445 -j ACCEPT -m comment --comment "cifs"
+-A OUTPUT -o br0 -p udp --sport 547 --dport 546 -j ACCEPT -m comment --comment "dhcp"
+-A OUTPUT -j LOG --log-prefix "Dropped ipv6 output packet "
+-A OUTPUT -p tcp -j REJECT --reject-with tcp-reset
+-A OUTPUT -p udp -j REJECT --reject-with icmp6-port-unreachable
+-A OUTPUT        -j REJECT --reject-with icmp6-port-unreachable
+COMMIT

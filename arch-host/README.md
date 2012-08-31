@@ -102,7 +102,8 @@ Run `pacman -Syy` first to update the database before installing.
 * iptables
 
 	1. Install `etc/iptables.rules` to `/etc/iptables/iptables.rules`
-	2. Add `iptables` to `DAEMONS` list in `/etc/rc.conf`
+	2. Install `etc/ip6tables.rules` to `/etc/iptables/ip6tables.rules`
+	3. Add `iptables` and `ip6tables` to `DAEMONS` list in `/etc/rc.conf`
 
 * mlocate
 
