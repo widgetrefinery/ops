@@ -97,6 +97,8 @@ Run `pacman -Syy` first to update the database before installing.
 		echo 'let g:netrw_dirhistmax  =0' >  /etc/skel/.vim/.netrwhist
 		echo 'let g:netrw_dirhist_cnt =0' >> /etc/skel/.vim/.netrwhist
 
+* wget
+
 # OS Configuration
 
 * agetty
@@ -126,6 +128,47 @@ Run `pacman -Syy` first to update the database before installing.
 		openssl genrsa -out /etc/ssl/private/server.key 1024
 		chmod 440 /etc/ssl/private/server.key
 		openssl req -new -x509 -out /etc/ssl/certs/server.crt -key /etc/ssl/private/server.key -days 3650
+
+# Dev Server Software
+
+* apache
+
+* base-devel
+
+* memcached
+
+	1. Remove `-l 127.0.0.1` from `MEMCACHED_ARGS` in `/etc/conf.d/memcached`
+
+	2. Add `memcached` to the `DAEMONS` list in `/etc/rc.conf`
+
+* mod_perl
+
+* vsftpd
+
+	1. Modify `/etc/vsftpd.conf`:
+
+		* anonymous_enable=NO
+		* local_enable=YES
+		* write_enable=YES
+		* local_umask=022
+		* dirmessage_enable=NO
+		* banner_file=/etc/conf.d/vsftpd.banner
+		* chroot_local_user=YES
+		* allow_writeable_chroot=YES
+		* listen=NO
+		* listen_ipv6=YES
+		* pasv_min_port=2000
+		* pasv_max_port=2048
+
+	2. Create `/etc/conf.d/vsftpd.banner`
+
+		***************************************************
+		Welcome to the Test FTP Server
+		***************************************************
+		
+		
+
+	3. Add `vsftpd` to the `DAEMONS` list in `/etc/rc.conf`
 
 # Email Services
 
