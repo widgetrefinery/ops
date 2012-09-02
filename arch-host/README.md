@@ -129,6 +129,8 @@ Run `pacman -Syy` first to update the database before installing.
 
 	1. Uncomment `startup_message off` in `/etc/screenrc`
 
+* squashfs-tools
+
 * sudo
 
 		cat >> /etc/sudoers << 'EOF'
@@ -345,4 +347,20 @@ Configuration:
 	3. Set `forwarder` in `/etc/totd.conf` to desired dns server
 
 	4. Add `totd` to `DAEMONS` list in `/etc/rc.conf`
+
+## Network Shares
+
+* nfs-utils
+
+Server Configuration:
+
+1. Set the domain in `/etc/idmapd.conf`
+2. Define shares in `/etc/exports`
+3. Add `rpcbind`, `nfs-common`, and `nfs-server` to the `DAEMONS` list in `/etc/rc.conf`
+
+Client Configuration:
+
+1. Set the domain in `/etc/idmapd.conf`
+2. Set `NEED_IDMAPD="yes"` in `/etc/conf.d/nfs-common.conf`
+3. Add `rpcbind` and `nfs-common` to the `DAEMONS` list in `/etc/rc.conf`
 
