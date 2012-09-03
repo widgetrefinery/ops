@@ -221,6 +221,47 @@ Configuration:
 		newaliases
 		postmap /etc/postfix/valiases
 
+# Oracle Database
+
+* base-devel
+* elfutils
+* libaio
+* libstdc++5
+* icu
+* unixodbc
+
+Fixes:
+
+	ln -fns /usr/bin/basename      /bin/basename
+	ln -fns /usr/bin/grep          /bin/grep
+	ln -fns /usr/bin/tr            /bin/tr
+	ln -fns /usr/lib/libgcc_s.so.1 /lib/libgcc_s.so.1
+
+Installation:
+
+	useradd -d /opt/oracle -m -k /dev/null -r -s /sbin/nologin oracle
+	chmod 0755 /opt/oracle
+	vi /etc/sysctl.conf
+		fs.aio-max-nr=1048576
+		fs.file-max=6815744
+		net.core.rmem_default=262144
+		net.core.rmem_max=4194304
+		net.core.wmem_default=262144
+		net.core.wmem_max=1048576
+		net.ipv4.ip_local_port_range=9000 65500
+		kernel.sem=250 32000 100 128
+		kernel.shmmax=536870912
+	vi /etc/security/limits.conf
+		oracle hard nofile 65536
+		oracle hard nproc 16384
+	mkdir ~/oracle.tmp
+	unzip -q $src/arch-guest/linux_11gR2_database_1of2.zip -d ~/oracle.tmp
+	unzip -q $src/arch-guest/linux_11gR2_database_1of2.zip -d ~/oracle.tmp
+	cd ~/oracle.tmp/database
+	vi response/db_install.rsp
+		#todo
+	./runInstaller -silent -responseFile response/db_install.rsp
+
 # Misc Services
 
 * memcached
