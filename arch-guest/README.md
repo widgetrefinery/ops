@@ -1,6 +1,6 @@
 # Allocate lvm
 
-	lvcreate -L8G -n $VM_HOSTNAME vg0
+	lvcreate -L16G -n $VM_HOSTNAME vg0
 	cryptsetup luksFormat --use-random /dev/vg0/$VM_HOSTNAME
 	cryptsetup luksOpen /dev/vg0/$VM_HOSTNAME $VM_HOSTNAME
 	dd if=/dev/zero of=/dev/mapper/$VM_HOSTNAME
@@ -31,8 +31,8 @@
 	* ^35 - pcmciautils
 	* ^37 - ppp
 	* ^40 - reiserfsprogs
-	* ^52 - wpa_supplicant
-	* ^53 - xfsprogs
+	* ^53 - wpa_supplicant
+	* ^54 - xfsprogs
 
 6. Install grub and dhclient using: `pacstrap /mnt grub-bios dhclient`
 
@@ -67,7 +67,7 @@
 
 # Additional Software
 
-Run `pacman -Syy` first to update the database before installing.
+Run `pacman -Syy` and `pacman-key --populate` first before installing.
 
 * dnsutils
 
@@ -176,7 +176,7 @@ Run `pacman -Syy` first to update the database before installing.
 
 ## Dovecot
 
-1. Install `etc/dovecot.conf` to `/etc/dovecot.conf`
+1. Install `etc/dovecot.conf` to `/etc/dovecot/dovecot.conf`
 
 2. Create `/etc/dovecot/users`:
 
@@ -208,18 +208,20 @@ Configuration:
 
 		testuser1@mydomain.org	testuser1@archive.mydomain.org testuser1@localhost.localdomain
 
-4. Modify `/etc/postfix/vmailboxes` to save the original messages to disk:
+4. Modify `/etc/postfix/vmailbox` to save the original messages to disk:
 
 		testuser1@archive.mydomain.org testuser1/
 
-5. Modify `/etc/postfix/alias` to filter specific recipients through the extractor script:
+5. Modify `/etc/postfix/aliases` to filter specific recipients through the extractor script:
 
 		testuser1: "|/usr/bin/perl /usr/local/bin/save-attachments.pl /attachment/dir /db.file"
 
 6. Update the postfix databases.
 
-		newaliases
+		postmap /etc/postfix/vdomains
 		postmap /etc/postfix/valiases
+		postmap /etc/postfix/vmailbox
+		newaliases
 
 # Oracle Database
 
