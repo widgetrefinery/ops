@@ -160,9 +160,8 @@ Run `pacman -Syy` first to update the database before installing.
 
 * bash
 
-	1. Install `bash.bashrc` to `/etc/bash.bashrc`
-	2. Remove `PS1` from `/etc/skel/.bashrc`
-	3. Add `alias vi=vim` to `/etc/skel/.bashrc`
+	1. Install `etc/bash.bashrc` to `/etc/bash.bashrc`
+	2. Install `home/bashrc` to `/etc/skel/.bashrc`
 
 * disable ipv6
 

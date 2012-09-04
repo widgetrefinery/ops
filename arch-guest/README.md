@@ -113,8 +113,7 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 * bash
 
 	1. Install `bash.bashrc` from arch-host to `/etc/bash.bashrc`
-	2. Remove `PS1` from `/etc/skel/.bashrc`
-	3. Add `alias vi=vim` to `/etc/skel/.bashrc`
+	2. Install `home/bashrc` from arch-host to `/etc/skel/.bashrc`
 
 * dhclient
 
