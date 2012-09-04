@@ -190,7 +190,7 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 ## Attachment Extractor
 
 * perl-mime-tools
-* bin/save-attachments.pl
+* $src/contrib/save-attachments.pl
 
 Configuration:
 
@@ -225,23 +225,20 @@ Configuration:
 # Oracle Database
 
 * base-devel
-* elfutils
+> elfutils
 * libaio
-* libstdc++5
-* icu
-* unixodbc
+> libstdc++5
+> icu
+> unixodbc
 
 Fixes:
 
 	ln -fns /usr/bin/basename      /bin/basename
 	ln -fns /usr/bin/grep          /bin/grep
 	ln -fns /usr/bin/tr            /bin/tr
-	ln -fns /usr/lib/libgcc_s.so.1 /lib/libgcc_s.so.1
 
-Installation:
+Increase OS Limits:
 
-	useradd -d /opt/oracle -m -k /dev/null -r -s /sbin/nologin oracle
-	chmod 0755 /opt/oracle
 	vi /etc/sysctl.conf
 		fs.aio-max-nr=1048576
 		fs.file-max=6815744
@@ -253,15 +250,25 @@ Installation:
 		kernel.sem=250 32000 100 128
 		kernel.shmmax=536870912
 	vi /etc/security/limits.conf
-		oracle hard nofile 65536
-		oracle hard nproc 16384
-	mkdir ~/oracle.tmp
-	unzip -q $src/arch-guest/linux_11gR2_database_1of2.zip -d ~/oracle.tmp
-	unzip -q $src/arch-guest/linux_11gR2_database_1of2.zip -d ~/oracle.tmp
-	cd ~/oracle.tmp/database
-	vi response/db_install.rsp
-		#todo
-	./runInstaller -silent -responseFile response/db_install.rsp
+		@oracle hard nofile 65536
+		@oracle hard nproc 16384
+	sysctl -p
+
+Installation:
+
+	useradd -d /opt/oracle -m -k /dev/null -r -s /sbin/nologin oracle
+	chmod 0755 /opt/oracle
+	mkdir /tmp/oracle.tmp
+	unzip -q $src/arch-guest/linux_11gR2_database_1of2.zip -d /tmp/oracle.tmp
+	unzip -q $src/arch-guest/linux_11gR2_database_1of2.zip -d /tmp/oracle.tmp
+	cd /tmp/oracle.tmp/database
+	vi $src/arch-guest/oracle-11gR2.rsp
+		oracle.install.db.config.starterdb.globalDBName=<database name>
+		oracle.install.db.config.starterdb.SID=<sid>
+		oracle.install.db.config.starterdb.password.ALL=<password>
+	sudo -u oracle ./runInstaller -silent -responseFile $src/arch-guest/oracle-11gR2.rsp -ignoreSysPrereqs -ignorePrereq
+	#/opt/oracle/oraInventory/orainstRoot.sh
+	#/opt/oracle/11.2.0/root.sh
 
 # Misc Services
 
