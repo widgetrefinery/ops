@@ -26,7 +26,12 @@
 
 # Install OS
 
-1. Install base system, skipping the following modules, using: `pacstrap -i /mnt base`
+1. Edit `/etc/pacman.d/mirrorlist` to suit:
+
+	awk '{print prefix $0} {prefix=""} $2 == "Score:" && $0 !~ /, United States$/ {prefix="#"}' < /etc/pacman.d/mirrorlist > mirrorlist.us
+	mv mirrorlist.us /etc/pacman.d/mirrorlist
+
+2. Install base system, skipping the following modules, using: `pacstrap -i /mnt base`
 
 	* ^19 - heirloop-mailx
 	* ^23 - jfsutils
@@ -37,9 +42,9 @@
 	* ^53 - wpa_supplicant
 	* ^54 - xfsprogs
 
-2. Install grub using: `pacstrap /mnt grub-bios`
+3. Install grub using: `pacstrap /mnt grub-bios`
 
-3. Configure os:
+4. Configure os:
 
 		genfstab -p /mnt >> /mnt/etc/fstab
 		arch-chroot /mnt
@@ -48,7 +53,7 @@
 		echo 'LANG="en_US.UTF-8"' > /etc/locale.conf
 		vi /etc/locale.get #enable relevant locales
 		locale-gen
-		mdadm --detail --scan >> /mnt/etc/mdadm.conf
+		mdadm --detail --scan >> /etc/mdadm.conf
 		vi /etc/mkinitcpio.conf
 			# add video driver (i915) to MODULES list
 			# i.e. MODULES="i915"
@@ -57,7 +62,7 @@
 		mkinitcpio -p linux
 		passwd #set root password
 
-4. Configure grub:
+5. Configure grub:
 
 		grub-mkconfig -o /boot/grub/grub.cfg
 		grub-install /dev/sdc
@@ -67,7 +72,7 @@
 			# add "cryptdevice=/dev/mapper/vg0-$HOSTNAME:$HOSTNAME" to linux command
 			# remove search statements
 
-5. Cleanup:
+6. Cleanup:
 
 		exit #out of chroot
 		umount /mnt/boot /mnt
@@ -83,7 +88,7 @@
 
 # Additional Software
 
-Run `pacman -Syy` first to update the database before installing.
+Run `pacman -Syy` and `pacman-key --populate` first before installing.
 
 * base-devel
 
@@ -101,8 +106,8 @@ Run `pacman -Syy` first to update the database before installing.
 
 * iptables
 
-	1. Install `etc/iptables.rules` to `/etc/iptables/iptables.rules`
-	2. Install `etc/ip6tables.rules` to `/etc/iptables/ip6tables.rules`
+	1. Install `$basedir/etc/iptables.rules` to `/etc/iptables/iptables.rules`
+	2. Install `$basedir/etc/ip6tables.rules` to `/etc/iptables/ip6tables.rules`
 	3. Add `iptables` and `ip6tables` to `DAEMONS` list in `/etc/rc.conf`
 
 * mlocate
@@ -160,8 +165,8 @@ Run `pacman -Syy` first to update the database before installing.
 
 * bash
 
-	1. Install `etc/bash.bashrc` to `/etc/bash.bashrc`
-	2. Install `home/bashrc` to `/etc/skel/.bashrc`
+	1. Install `$basedir/etc/bash.bashrc` to `/etc/bash.bashrc`
+	2. Install `$basedir/home/bashrc` to `/etc/skel/.bashrc`
 
 * disable ipv6
 
@@ -209,12 +214,12 @@ Configuration:
 
 Configuration:
 
-1. Install `home/i3.conf` to `/etc/skel/.i3/i3.conf`
-2. Install `home/i3.conf` to `/etc/skel/.i3/i3-nx.conf`
+1. Install `$basedir/home/i3.conf` to `/etc/skel/.i3/i3.conf`
+2. Install `$basedir/home/i3.conf` to `/etc/skel/.i3/i3-nx.conf`
 3. Modify `/etc/skel/.i3/i3-nx.conf`, changing the `$mod` variable from `Mod4` to `Mod1`
-3. Install `home/i3status.conf` to `/etc/skel/.i3/i3status.conf`
-4. Install `home/xinitrc` to `/etc/skel/.xinitrc`
-5. Install `home/Xdefaults` to `/etc/skel/.Xdefaults`
+3. Install `$basedir/home/i3status.conf` to `/etc/skel/.i3/i3status.conf`
+4. Install `$basedir/home/xinitrc` to `/etc/skel/.xinitrc`
+5. Install `$basedir/home/Xdefaults` to `/etc/skel/.Xdefaults`
 
 ## Desktop Apps
 
@@ -259,7 +264,7 @@ Configuration:
 
 1. Add `kvm` and `kvm-intel` to `MODULES` list in `/etc/rc.conf`
 
-2. Install `contrib/kvm-wrapper.sh` to `/usr/local/bin`
+2. Install `$basedir/contrib/kvm-wrapper.sh` to `/usr/local/bin`
 
 3. Add yourself to the `disk`, `kvm`, and `wheel` groups
 
@@ -293,9 +298,9 @@ Configuration:
 
 * Install and configure bind:
 
-	1. Install `guest-networking/named.conf` to `/etc/named.conf`
-	2. Install `guest-networking/named.zone` to `/var/named/named.zone`
-	3. Install `guest-networking/named.reverse` to `/var/named/named.reverse`
+	1. Install `$basedir/guest-networking/named.conf` to `/etc/named.conf`
+	2. Install `$basedir/guest-networking/named.zone` to `/var/named/named.zone`
+	3. Install `$basedir/guest-networking/named.reverse` to `/var/named/named.reverse`
 	4. Add `named` to `DAEMONS` list in `/etc/rc.conf`
 	5. `chmod 770 /var/named`
 	6. Create `/etc/resolve.conf.head`:
@@ -305,18 +310,18 @@ Configuration:
 
 * Install and configure dhcp:
 
-	1. Install `guest-networking/dhcpd.conf` to `/etc/dhcpd.conf`
+	1. Install `$basedir/guest-networking/dhcpd.conf` to `/etc/dhcpd.conf`
 	2. Add `dhcp6` to `DAEMONS` list in `/etc/rc.conf`
 
 * Install and configure kvm-network:
 
 	1. Install bridge-utils
-	1. Install `guest-networking/kvm-network.sh` to `/etc/rc.d/kvm-network`
+	1. Install `$basedir/contrib/kvm-network.sh` to `/etc/rc.d/kvm-network`
 	2. Add `kvm-network` to `DAEMONS` list in `/etc/rc.conf`
 
 * Install and configure radvd:
 
-	1. Install `guest-networking/radvd.conf` to `/etc/radvd.conf`
+	1. Install `$basedir/guest-networking/radvd.conf` to `/etc/radvd.conf`
 	2. Add `radvd` to `DAEMONS` list in `/etc/rc.conf`
 
 * Install and configure tayga:
@@ -329,7 +334,7 @@ Configuration:
 			makepkg
 			sudo pacman -U tayga-0.9.2-1-i686.pkg.tar.xz
 
-	2. Install `guest-networking/tayga.conf` to `/etc/tayga.conf`
+	2. Install `$basedir/guest-networking/tayga.conf` to `/etc/tayga.conf`
 
 * Install and configure totd:
 
@@ -341,7 +346,7 @@ Configuration:
 			makepkg
 			sudo pacman -U totd-1.5.1-4-i686.pkg.tar.xz
 
-	2. Install `guest-networking/totd.conf` to `/etc/totd.conf`
+	2. Install `$basedir/guest-networking/totd.conf` to `/etc/totd.conf`
 
 	3. Set `forwarder` in `/etc/totd.conf` to desired dns server
 
