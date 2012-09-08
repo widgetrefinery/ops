@@ -1,7 +1,8 @@
 #!/bin/sh
 autocutsel -fork &
 autocutsel -selection PRIMARY -fork &
-xautolock -time 10 -locker "i3lock -c 000000" &
+xautolock -time 10 -locker "i3lock -c 000000 -i ~/.i3/i3lock.png" &
+[ -e ~/.fehbg ] && . ~/.fehbg
 if [ -z "${NXSESSIONID:-}" ]; then
 	exec i3 -c ~/.i3/i3.conf
 else

@@ -206,6 +206,10 @@ Configuration:
 	4. Uncomment `x:5:respawn:/usr/bin/slim >/dev/null 2>&1`
 	5. Add `xt:5:wait:/usr/bin/chvt 7`
 
+Themes:
+
+Themes are defined in `/usr/share/slim/themes`. Simplest customization is to just replace `default/background.jpg` with an image of your choice.
+
 ## Window Manager
 
 * i3-wm
@@ -221,6 +225,12 @@ Configuration:
 4. Install `$basedir/home/xinitrc` to `/etc/skel/.xinitrc`
 5. Install `$basedir/home/Xdefaults` to `/etc/skel/.Xdefaults`
 
+Background:
+
+Use feh to change the background image. `~/.xinitrc` will automatically detect `.fehbg` and run it at login.
+
+The screen locker will use ~/.i3/i3lock.png as the lock image if it exists. Otherwise it displays a black screen.
+
 ## Desktop Apps
 
 * alsa-utils
@@ -228,6 +238,7 @@ Configuration:
 * dmenu
 * feh
 * firefox
+* imagemagick
 * sylpheed
 * xautolock
 * xterm
