@@ -229,13 +229,14 @@ Configuration:
 * libaio
 > libstdc++5
 > icu
+* pdksh
 > unixodbc
 
 Fixes:
 
-	ln -fns /usr/bin/basename      /bin/basename
-	ln -fns /usr/bin/grep          /bin/grep
-	ln -fns /usr/bin/tr            /bin/tr
+	ln -fns /usr/bin/basename /bin/basename
+	ln -fns /usr/bin/grep     /bin/grep
+	ln -fns /usr/bin/tr       /bin/tr
 
 Increase OS Limits:
 
@@ -262,13 +263,28 @@ Installation:
 	unzip -q $src/arch-guest/linux_11gR2_database_1of2.zip -d /tmp/oracle.tmp
 	unzip -q $src/arch-guest/linux_11gR2_database_1of2.zip -d /tmp/oracle.tmp
 	cd /tmp/oracle.tmp/database
-	vi $src/arch-guest/oracle-11gR2.rsp
-		oracle.install.db.config.starterdb.globalDBName=<database name>
-		oracle.install.db.config.starterdb.SID=<sid>
-		oracle.install.db.config.starterdb.password.ALL=<password>
 	sudo -u oracle ./runInstaller -silent -responseFile $src/arch-guest/oracle-11gR2.rsp -ignoreSysPrereqs -ignorePrereq
-	#/opt/oracle/oraInventory/orainstRoot.sh
-	#/opt/oracle/11.2.0/root.sh
+	/opt/oracle/oraInventory/orainstRoot.sh
+	/opt/oracle/database/11.2.0/root.sh
+	sudo chmod 6751 /opt/oracle/database/11.2.0/bin/oracle
+	install -o root   -g root   -m 0644 $basedir/oracle/ld.so.conf /etc/ld.so.conf.d/oracle.conf
+	install -o root   -g root   -m 0755 $basedir/oracle/profile.sh /etc/profile.d/oracle.sh
+	install -o oracle -g oracle -m 0644 $basedir/oracle/sqlnet.ora /opt/oracle/database/11.2.0/network/admin/sqlnet.ora
+	ldconfig
+
+## Creatig a Database
+
+	sudo -u oracle /opt/oracle/database/11.2.0/bin/dbca -silent -createDatabase -templateName General_Purpose.dbc -gdbname <global database name> -sid <sid> -totalMemory 512
+
+## Starting a Database
+
+	sudo -u oracle ORACLE_HOME=/opt/oracle/database/11.2.0 ORACLE_SID=<sid> /opt/oracle/database/11.2.0/bin/sqlplus '/ as sysdba'
+		startup
+
+## Stopping a Database
+
+	sudo -u oracle ORACLE_HOME=/opt/oracle/database/11.2.0 ORACLE_SID=<sid> /opt/oracle/database/11.2.0/bin/sqlplus '/ as sysdba'
+		shutdown
 
 # Misc Services
 
