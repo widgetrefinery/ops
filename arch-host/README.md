@@ -259,7 +259,7 @@ Configuration:
 
 1. Add `kvm` and `kvm-intel` to `MODULES` list in `/etc/rc.conf`
 
-2. Install `kvm-wrapper.sh` to `/usr/local/bin`
+2. Install `contrib/kvm-wrapper.sh` to `/usr/local/bin`
 
 3. Add yourself to the `disk`, `kvm`, and `wheel` groups
 
