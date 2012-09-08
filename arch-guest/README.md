@@ -190,7 +190,7 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 ## Attachment Extractor
 
 * perl-mime-tools
-* $src/contrib/save-attachments.pl
+* $basedir/contrib/save-attachments.pl
 
 Configuration:
 
@@ -263,7 +263,7 @@ Installation:
 	unzip -q $src/arch-guest/linux_11gR2_database_1of2.zip -d /tmp/oracle.tmp
 	unzip -q $src/arch-guest/linux_11gR2_database_1of2.zip -d /tmp/oracle.tmp
 	cd /tmp/oracle.tmp/database
-	sudo -u oracle ./runInstaller -silent -responseFile $src/arch-guest/oracle-11gR2.rsp -ignoreSysPrereqs -ignorePrereq
+	sudo -u oracle ./runInstaller -silent -responseFile $basedir/arch-guest/oracle-11gR2.rsp -ignoreSysPrereqs -ignorePrereq
 	/opt/oracle/oraInventory/orainstRoot.sh
 	/opt/oracle/database/11.2.0/root.sh
 	sudo chmod 6751 /opt/oracle/database/11.2.0/bin/oracle
