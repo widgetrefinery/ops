@@ -2,27 +2,38 @@
 
 * /
 
-		dd if=/dev/zero of=/dev/sda
+		dd if=/dev/zero of=/dev/sda bs=4096K
 		mdadm --create --metadata=1.1 --homehost=$HOSTNAME --raid-devices=2 --level=1 /dev/md0 /dev/sda missing
 		pvcreate /dev/md0
 		vgcreate vg0 /dev/md0
-		lvcreate -L8G -n $HOSTNAME vg0
+		lvcreate -L16G -n $HOSTNAME vg0
 		cryptsetup luksFormat --use-random /dev/vg0/$HOSTNAME
 		cryptsetup luksOpen /dev/vg0/$HOSTNAME $HOSTNAME
-		dd if=/dev/zero of=/dev/mapper/$HOSTNAME
+		dd if=/dev/zero of=/dev/mapper/$HOSTNAME bs=4096K
 		mke2fs -t ext4 /dev/mapper/$HOSTNAME
 		mount /dev/mapper/$HOSTNAME /mnt
 
-* /boot
+* /boot (gpt)
 
 		parted /dev/sdc
 			mklabel gpt
 			mkpart primary 2048s 20479s	#512B sectors; ~10MB partition
-			mkpart primary 20480s -1s	#rest of drive
+			mkpart primary 20480s 282623s	#~128MB /boot partition
+			mkpart primary 282624s -1s	#rest of drive
 			set 1 bios_grub on
 		mke2fs -t ext2 /dev/sdc2
 		mkdir /mnt/boot
 		mount /dev/sdc2 /mnt/boot
+
+* /boot (msdos)
+
+		parted /dev/sdc
+			mklabel msdos
+			mkpart primary 20480s 282623s	#~128MB /boot partition
+			mkpart primary 282624s -1s	#rest of drive
+		mke2fs -t ext2 /dev/sdc1
+		mkdir /mnt/boot
+		mount /dev/sdc1 /mnt/boot
 
 # Install OS
 
@@ -47,13 +58,13 @@
 4. Configure os:
 
 		genfstab -p /mnt >> /mnt/etc/fstab
+		mdadm --detail --scan >> /mnt/etc/mdadm.conf
 		arch-chroot /mnt
 		echo $HOSTNAME > /etc/hostname
 		ln -fns /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 		echo 'LANG="en_US.UTF-8"' > /etc/locale.conf
 		vi /etc/locale.get #enable relevant locales
 		locale-gen
-		mdadm --detail --scan >> /etc/mdadm.conf
 		vi /etc/mkinitcpio.conf
 			# add video driver (i915) to MODULES list
 			# i.e. MODULES="i915"
@@ -68,7 +79,8 @@
 		grub-install /dev/sdc
 		rm -f /boot/grub/grub.cfg.example
 		vi /boot/grub/grub.cfg
-			# change "set root='hd2,gpt2'" to "set root='hda0,gpt2'"
+			# if using gpt boot device, change "set root='hd2,gpt2'" to "set root='hd0,gpt2'"
+			# if using msdos boot device, change "set root='hd2,msdos1'" to "set root='hd0,msdos1'"
 			# add "cryptdevice=/dev/mapper/vg0-$HOSTNAME:$HOSTNAME" to linux command
 			# remove search statements
 
