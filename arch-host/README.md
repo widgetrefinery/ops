@@ -66,7 +66,7 @@
 		vi /etc/locale.get #enable relevant locales
 		locale-gen
 		vi /etc/mkinitcpio.conf
-			# add video driver (i915) to MODULES list
+			# add video driver (i915, radeon, etc.) to MODULES list
 			# i.e. MODULES="i915"
 			# add mdadm_udev, lvm2, encrypt to HOOKS list
 			# i.e. HOOKS="base udev autodetect pata scsi sata mdadm_udev lvm2 usbinput encrypt filesystems fsck"
@@ -81,7 +81,7 @@
 		vi /boot/grub/grub.cfg
 			# if using gpt boot device, change "set root='hd2,gpt2'" to "set root='hd0,gpt2'"
 			# if using msdos boot device, change "set root='hd2,msdos1'" to "set root='hd0,msdos1'"
-			# add "cryptdevice=/dev/mapper/vg0-$HOSTNAME:$HOSTNAME" to linux command
+			# add "lvmwait=/dev/mapper/vg0-$HOSTNAME cryptdevice=/dev/mapper/vg0-$HOSTNAME:$HOSTNAME" to linux command
 			# remove search statements
 
 6. Cleanup:
@@ -155,8 +155,6 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 		%wheel ALL=(ALL) ALL
 		EOF
 
-* traceroute
-
 * vim
 
 		cp /usr/share/vim/vim73/vimrc_example.vim /etc/skel/.vimrc
@@ -196,6 +194,7 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 * xorg-server
 * xorg-server-utils
 * xf86-video-intel
+* xf86-video-ati
 * xf86-video-vesa
 * xf86-video-fbdev
 
@@ -247,6 +246,7 @@ The screen locker will use ~/.i3/i3lock.png as the lock image if it exists. Othe
 
 * alsa-utils
 * autocutsel
+* chromium
 * dmenu
 * feh
 * firefox
@@ -326,7 +326,7 @@ Configuration:
 	3. Install `$basedir/guest-networking/named.reverse` to `/var/named/named.reverse`
 	4. Add `named` to `DAEMONS` list in `/etc/rc.conf`
 	5. `chmod 770 /var/named`
-	6. Create `/etc/resolve.conf.head`:
+	6. Create `/etc/resolv.conf.head`:
 
 			search <domainname>
 			nameserver ::1
