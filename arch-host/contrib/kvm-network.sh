@@ -16,6 +16,7 @@ tunnel_ipv6_subnet=$(awk '$1 == "prefix" {print $2}' /etc/tayga.conf)
 function f_start {
 	brctl addbr $switch_name
 	ip addr add $switch_ip/64 dev $switch_name
+	ip link set $switch_name up
 
 	tayga --mktun >/dev/null
 	ip link set $tunnel_name up

@@ -7,6 +7,7 @@
 -A INPUT -i lo -j ACCEPT
 -A INPUT -p tcp --dport 22 -j ACCEPT
 -A INPUT -i br0 -p ipv6-icmp                    -j ACCEPT
+-A INPUT -i br0 -p tcp --sport  20              -j ACCEPT
 -A INPUT -i br0 -p tcp             --dport   53 -j ACCEPT -m comment --comment "dns"
 -A INPUT -i br0 -p udp             --dport   53 -j ACCEPT -m comment --comment "dns"
 -A INPUT -i br0 -p udp --sport 546 --dport  547 -j ACCEPT -m comment --comment "dhcp"
@@ -30,10 +31,12 @@
 -A OUTPUT -p udp --dport 123 -j ACCEPT -m comment --comment "ntp"
 -A OUTPUT -p tcp --dport 443 -j ACCEPT
 -A OUTPUT -p tcp --dport 445 -j ACCEPT -m comment --comment "cifs"
+-A OUTPUT -o br0 -p tcp             --dport  21 -j ACCEPT
 -A OUTPUT -o br0 -p tcp             --dport  25 -j ACCEPT -m comment --comment "smtp"
 -A OUTPUT -o br0 -p udp --sport 547 --dport 546 -j ACCEPT -m comment --comment "dhcp"
 -A OUTPUT -o br0 -p tcp --sport 758             -j ACCEPT -m comment --comment "nfs - nlogin"
 -A OUTPUT -o br0 -p tcp             --dport 993 -j ACCEPT -m comment --comment "imap"
+-A OUTPUT -o br0 -p tcp             --dport 2000:2048 -j ACCEPT -m comment --comment "ftp"
 #-A OUTPUT -j LOG --log-prefix "Dropped ipv6 output packet "
 -A OUTPUT -p tcp -j REJECT --reject-with tcp-reset
 -A OUTPUT -p udp -j REJECT --reject-with icmp6-port-unreachable

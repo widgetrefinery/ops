@@ -166,6 +166,8 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 		let g:netrw_dirhist_cnt =0
 		EOF
 
+* wget
+
 # OS Configuration
 
 * agetty
@@ -330,6 +332,10 @@ Configuration:
 
 			search <domainname>
 			nameserver ::1
+
+	7. Create `/etc/resolv.conf.tail`:
+
+			domain <domainname>
 
 * Install and configure dhcp:
 

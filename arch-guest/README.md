@@ -3,7 +3,7 @@
 	lvcreate -L16G -n $VM_HOSTNAME vg0
 	cryptsetup luksFormat --use-random /dev/vg0/$VM_HOSTNAME
 	cryptsetup luksOpen /dev/vg0/$VM_HOSTNAME $VM_HOSTNAME
-	dd if=/dev/zero of=/dev/mapper/$VM_HOSTNAME
+	dd if=/dev/zero of=/dev/mapper/$VM_HOSTNAME bs=4096K
 
 # Boot Up VM and Install OS
 
@@ -47,7 +47,7 @@
 		locale-gen
 		vi /etc/mkinitcpio.conf
 			#add virtio modules to MODULES list
-			#i.e. MODULES="virtio virtio_pci virtio_blk virtio_net virtio_rng"
+			#i.e. MODULES="virtio virtio_pci virtio_blk virtio_net virtio_ring"
 		mkinitcpio -p linux
 		vi /etc/rc.conf #remove network from list of DAEMONS
 		echo 'dhclient -6 eth0' >> /etc/rc.local
@@ -227,16 +227,18 @@ Configuration:
 * base-devel
 > elfutils
 * libaio
-> libstdc++5
+* libstdc++5
 > icu
-* pdksh
+* mksh
 > unixodbc
 
 Fixes:
 
+	ln -fns /bin/mksh         /bin/ksh
 	ln -fns /usr/bin/basename /bin/basename
 	ln -fns /usr/bin/grep     /bin/grep
 	ln -fns /usr/bin/tr       /bin/tr
+	ln -fns /usr/lib          /usr/lib64
 
 Increase OS Limits:
 
@@ -260,10 +262,13 @@ Installation:
 	useradd -d /opt/oracle -m -k /dev/null -r -s /sbin/nologin oracle
 	chmod 0755 /opt/oracle
 	mkdir /tmp/oracle.tmp
-	unzip -q $src/arch-guest/linux_11gR2_database_1of2.zip -d /tmp/oracle.tmp
-	unzip -q $src/arch-guest/linux_11gR2_database_1of2.zip -d /tmp/oracle.tmp
+	unzip -q $src/arch-guest/linux.x64_11gR2_database_1of2.zip -d /tmp/oracle.tmp
+	unzip -q $src/arch-guest/linux.x64_11gR2_database_1of2.zip -d /tmp/oracle.tmp
 	cd /tmp/oracle.tmp/database
+	# run the following as root in another terminal
+	while [ ! -e /opt/oracle/database/11.2.0/sysman/lib/ins_emagent.mk ]; do sleep 1; done; sudo -u oracle sed -i 's/$(MK_EMAGENT_NMECTL)/$(MK_EMAGENT_NMECTL) -lnnz11/' /opt/oracle/database/11.2.0/sysman/lib/ins_emagent.mk
 	sudo -u oracle ./runInstaller -silent -responseFile $basedir/arch-guest/oracle-11gR2.rsp -ignoreSysPrereqs -ignorePrereq
+	# ignore the error: /usr/lib/libstdc++.so.5: undefined reference to `memcpy@GLIBC_2.14'
 	/opt/oracle/oraInventory/orainstRoot.sh
 	/opt/oracle/database/11.2.0/root.sh
 	sudo chmod 6751 /opt/oracle/database/11.2.0/bin/oracle
@@ -274,15 +279,18 @@ Installation:
 
 ## Creatig a Database
 
+	# must be run from the local console, not over ssh
 	sudo -u oracle /opt/oracle/database/11.2.0/bin/dbca -silent -createDatabase -templateName General_Purpose.dbc -gdbname <global database name> -sid <sid> -totalMemory 512
 
 ## Starting a Database
 
+	# ensure that ORACLE_HOME does not have trailing slash
 	sudo -u oracle ORACLE_HOME=/opt/oracle/database/11.2.0 ORACLE_SID=<sid> /opt/oracle/database/11.2.0/bin/sqlplus '/ as sysdba'
 		startup
 
 ## Stopping a Database
 
+	# ensure that ORACLE_HOME does not have trailing slash
 	sudo -u oracle ORACLE_HOME=/opt/oracle/database/11.2.0 ORACLE_SID=<sid> /opt/oracle/database/11.2.0/bin/sqlplus '/ as sysdba'
 		shutdown
 
@@ -310,6 +318,7 @@ Installation:
 		* listen_ipv6=YES
 		* pasv_min_port=2000
 		* pasv_max_port=2048
+		* seccomp_sandbox=NO
 
 	2. Create `/etc/conf.d/vsftpd.banner`
 
