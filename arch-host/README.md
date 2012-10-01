@@ -166,6 +166,8 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 		let g:netrw_dirhist_cnt =0
 		EOF
 
+* unzip
+
 * wget
 
 # OS Configuration

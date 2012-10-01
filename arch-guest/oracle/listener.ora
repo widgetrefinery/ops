@@ -1,0 +1,12 @@
+LISTENER = (ADDRESS_LIST=
+	(ADDRESS=(PROTOCOL=tcp)(HOST=localhost)(PORT=1521))
+	(ADDRESS=(PROTOCOL=ipc)(KEY=PNPKEY)))
+
+SID_LIST_LISTENER=
+	(SID_LIST=
+	(SID_DESC=
+	(SID_NAME=sid)
+	(ORACLE_HOME=/opt/oracle/database/11.2.0)
+	)
+	)
+

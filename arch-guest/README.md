@@ -234,11 +234,11 @@ Configuration:
 
 Fixes:
 
-	ln -fns /bin/mksh         /bin/ksh
 	ln -fns /usr/bin/basename /bin/basename
 	ln -fns /usr/bin/grep     /bin/grep
 	ln -fns /usr/bin/tr       /bin/tr
-	ln -fns /usr/lib          /usr/lib64
+	ln -fns mksh              /bin/ksh
+	ln -fns lib               /usr/lib64
 
 Increase OS Limits:
 
@@ -267,7 +267,7 @@ Installation:
 	cd /tmp/oracle.tmp/database
 	# run the following as root in another terminal
 	while [ ! -e /opt/oracle/database/11.2.0/sysman/lib/ins_emagent.mk ]; do sleep 1; done; sudo -u oracle sed -i 's/$(MK_EMAGENT_NMECTL)/$(MK_EMAGENT_NMECTL) -lnnz11/' /opt/oracle/database/11.2.0/sysman/lib/ins_emagent.mk
-	sudo -u oracle ./runInstaller -silent -responseFile $basedir/arch-guest/oracle-11gR2.rsp -ignoreSysPrereqs -ignorePrereq
+	sudo -u oracle ./runInstaller -silent -responseFile $basedir/arch-guest/contrib/oracle-11gR2.rsp -ignoreSysPrereqs -ignorePrereq
 	# ignore the error: /usr/lib/libstdc++.so.5: undefined reference to `memcpy@GLIBC_2.14'
 	/opt/oracle/oraInventory/orainstRoot.sh
 	/opt/oracle/database/11.2.0/root.sh
@@ -281,18 +281,22 @@ Installation:
 
 	# must be run from the local console, not over ssh
 	sudo -u oracle /opt/oracle/database/11.2.0/bin/dbca -silent -createDatabase -templateName General_Purpose.dbc -gdbname <global database name> -sid <sid> -totalMemory 512
+	install -o oracle -g oracle -m 0644 $basedir/oracle/listener.ora /opt/oracle/database/11.2.0/network/admin/
+	# modify the hostname and sid id in listener.ora to suit
 
 ## Starting a Database
 
 	# ensure that ORACLE_HOME does not have trailing slash
 	sudo -u oracle ORACLE_HOME=/opt/oracle/database/11.2.0 ORACLE_SID=<sid> /opt/oracle/database/11.2.0/bin/sqlplus '/ as sysdba'
 		startup
+	sudo -u oracle ORACLE_HOME=/opt/oracle/database/11.2.0 /opt/oracle/database/11.2.0/bin/lsnrctl start
 
 ## Stopping a Database
 
 	# ensure that ORACLE_HOME does not have trailing slash
 	sudo -u oracle ORACLE_HOME=/opt/oracle/database/11.2.0 ORACLE_SID=<sid> /opt/oracle/database/11.2.0/bin/sqlplus '/ as sysdba'
 		shutdown
+	sudo -u oracle ORACLE_HOME=/opt/oracle/database/11.2.0 /opt/oracle/database/11.2.0/bin/lsnrctl stop
 
 # Misc Services
 
