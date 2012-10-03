@@ -1,3 +1,4 @@
 xterm*background: #000000
 xterm*foreground: #999999
+xterm*color4: royalblue
 xterm*metaSendsEscape: true
