@@ -116,6 +116,8 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 		/etc/cron.hourly/fortune-motd
 		sed -i '/pam_motd\.so/d' /etc/pam.d/system-login
 
+* git
+
 * iptables
 
 	1. Install `$basedir/etc/iptables.rules` to `/etc/iptables/iptables.rules`
@@ -249,7 +251,6 @@ The screen locker will use ~/.i3/i3lock.png as the lock image if it exists. Othe
 ## Desktop Apps
 
 * alsa-utils
-* autocutsel
 * chromium
 * dmenu
 * feh
@@ -289,7 +290,7 @@ Once the client is connected, you can exit using CTRL+ALT+T.
 
 Configuration:
 
-1. Add `kvm` and `kvm-intel` to `MODULES` list in `/etc/rc.conf`
+1. Add `kvm` and `kvm-intel` to `/etc/modules-load.d/kvm.conf`
 
 2. Install `$basedir/contrib/kvm-wrapper.sh` to `/usr/local/bin`
 
