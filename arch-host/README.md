@@ -144,6 +144,8 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 
 		pkgfile --update
 
+* rsync
+
 * screen
 
 	1. Uncomment `startup_message off` in `/etc/screenrc`
