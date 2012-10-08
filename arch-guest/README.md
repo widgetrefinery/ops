@@ -69,6 +69,8 @@
 
 Run `pacman -Syy` and `pacman-key --populate` first before installing.
 
+* base-devel
+
 * dnsutils
 
 * mlocate
@@ -125,6 +127,10 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 * login.defs
 
 	1. Add `CREATE_HOME yes` to `/etc/login.defs`
+
+* sysctl.conf
+
+	1. Add `net.ipv6.bindv6only = 1` to `/etc/sysctl.conf`
 
 * ssl certificate
 
@@ -224,13 +230,9 @@ Configuration:
 
 # Oracle Database
 
-* base-devel
-> elfutils
 * libaio
 * libstdc++5
-> icu
 * mksh
-> unixodbc
 
 Fixes:
 
@@ -299,6 +301,26 @@ Installation:
 	sudo -u oracle ORACLE_HOME=/opt/oracle/database/11.2.0 /opt/oracle/database/11.2.0/bin/lsnrctl stop
 
 # Misc Services
+
+* cronolog
+
+		wget http://aur.archlinux.org/packages/cr/cronolog/cronolog.tar.gz
+		tar -xf cronolog.tar.gz
+		cd cronolog
+		makepkg
+		pacman -U cronolog-1.6.2-4-x86_64.pkg.tar.xz
+		ln -fns /usr/sbin/cronolog /usr/local/sbin/cronolog
+
+* daemontools
+
+		wget http://aur.archlinux.org/packages/da/daemontools/daemontools.tar.gz
+		tar -xf daemontools.tar.gz
+		cd daemontools
+		vi PKGBUILD #change /usr/sbin paths to /usr/local/bin
+		vi daemontools.install #change /usr/sbin paths to /usr/local/bin
+		makepkg
+		pacman -U daemontools-0.76-5-x86_64.pkg.tar.xz
+		chmod 4755 /usr/sbin/svstat
 
 * memcached
 

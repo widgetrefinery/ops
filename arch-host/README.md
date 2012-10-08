@@ -258,6 +258,8 @@ The screen locker will use ~/.i3/i3lock.png as the lock image if it exists. Othe
 * feh
 * firefox
 * imagemagick
+* libao (pre-req for rdesktop-ipv6)
+* rdesktop-ipv6 (aur)
 * sylpheed
 * xautolock
 * xterm
@@ -329,16 +331,17 @@ Configuration:
 * Install and configure bind:
 
 	1. Install `$basedir/guest-networking/named.conf` to `/etc/named.conf`
-	2. Install `$basedir/guest-networking/named.zone` to `/var/named/named.zone`
-	3. Install `$basedir/guest-networking/named.reverse` to `/var/named/named.reverse`
-	4. Add `named` to `DAEMONS` list in `/etc/rc.conf`
-	5. `chmod 770 /var/named`
-	6. Create `/etc/resolv.conf.head`:
+	2. Set `forwarders` in `/etc/named.conf` to desired dns server
+	3. Install `$basedir/guest-networking/named.zone` to `/var/named/named.zone`
+	4. Install `$basedir/guest-networking/named.reverse` to `/var/named/named.reverse`
+	5. Add `named` to `DAEMONS` list in `/etc/rc.conf`
+	6. `chmod 770 /var/named`
+	7. Create `/etc/resolv.conf.head`:
 
 			search <domainname>
 			nameserver ::1
 
-	7. Create `/etc/resolv.conf.tail`:
+	8. Create `/etc/resolv.conf.tail`:
 
 			domain <domainname>
 
@@ -369,22 +372,6 @@ Configuration:
 			sudo pacman -U tayga-0.9.2-1-i686.pkg.tar.xz
 
 	2. Install `$basedir/guest-networking/tayga.conf` to `/etc/tayga.conf`
-
-* Install and configure totd:
-
-	1. Compile and install totd 1.5.1-4 from aur:
-
-			wget http://aur.archlinux.org/packages/to/totd/totd.tar.gz
-			tar -xf totd.tar.gz
-			cd totd
-			makepkg
-			sudo pacman -U totd-1.5.1-4-i686.pkg.tar.xz
-
-	2. Install `$basedir/guest-networking/totd.conf` to `/etc/totd.conf`
-
-	3. Set `forwarder` in `/etc/totd.conf` to desired dns server
-
-	4. Add `totd` to `DAEMONS` list in `/etc/rc.conf`
 
 ## Network Shares
 
