@@ -257,10 +257,11 @@ The screen locker will use ~/.i3/i3lock.png as the lock image if it exists. Othe
 * dmenu
 * feh
 * firefox
+* flashplugin
 * imagemagick
 * libao (pre-req for rdesktop-ipv6)
 * rdesktop-ipv6 (aur)
-* sylpheed
+* thunderbird
 * xautolock
 * xterm
 
