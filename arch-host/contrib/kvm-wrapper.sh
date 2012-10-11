@@ -72,13 +72,16 @@ function f_run {
 		-serial none \
 		-parallel none \
 		-monitor telnet:127.0.0.1:$((5800+vm_index)),server,nowait \
+		-pidfile /tmp/kvm-$vm_name.pid \
 		-S \
 		-D /tmp/kvm-$vm_name.log \
 		-enable-kvm \
 		-daemonize \
 		$vm_rtc
-#		-no-kvm-pit-reinjection
-#		-global kvm-pit.lost_tick_policy=discard
+
+	vm_pid=$(</tmp/kvm-$vm_name.pid)
+	echo "Shielding vm ($vm_pid) from oom killer ..."
+	sudo bash -c "echo -17 > /proc/$vm_pid/oom_adj"
 }
 
 function f_init {
