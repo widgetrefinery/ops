@@ -335,14 +335,15 @@ Configuration:
 	2. Set `forwarders` in `/etc/named.conf` to desired dns server
 	3. Install `$basedir/guest-networking/named.zone` to `/var/named/named.zone`
 	4. Install `$basedir/guest-networking/named.reverse` to `/var/named/named.reverse`
-	5. Add `named` to `DAEMONS` list in `/etc/rc.conf`
-	6. `chmod 770 /var/named`
-	7. Create `/etc/resolv.conf.head`:
+	5. Edit `/var/named/root.hint` commenting out the ipv6 entries
+	6. Add `named` to `DAEMONS` list in `/etc/rc.conf`
+	7. `chmod 770 /var/named`
+	8. Create `/etc/resolv.conf.head`:
 
 			search <domainname>
 			nameserver ::1
 
-	8. Create `/etc/resolv.conf.tail`:
+	9. Create `/etc/resolv.conf.tail`:
 
 			domain <domainname>
 
