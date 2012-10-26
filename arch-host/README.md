@@ -185,6 +185,7 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 
 	1. Install `$basedir/etc/bash.bashrc` to `/etc/bash.bashrc`
 	2. Install `$basedir/home/bashrc` to `/etc/skel/.bashrc`
+	3. Add `set mark-symlinked-directories on` to `/etc/inputrc`
 
 * disable ipv6
 
