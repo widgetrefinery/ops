@@ -3,7 +3,7 @@
 	lvcreate -L16G -n $VM_HOSTNAME vg0
 	cryptsetup luksFormat --use-random /dev/vg0/$VM_HOSTNAME
 	cryptsetup luksOpen /dev/vg0/$VM_HOSTNAME $VM_HOSTNAME
-	dd if=/dev/zero of=/dev/mapper/$VM_HOSTNAME bs=4096K
+	dd if=/dev/zero of=/dev/mapper/$VM_HOSTNAME bs=4M
 
 # Boot Up VM and Install OS
 
@@ -23,16 +23,18 @@
 
 4. Edit `/etc/pacman.d/mirrorlist` to suit
 
+		awk '{print prefix $0} {prefix=""} $2 == "Score:" && $0 !~ /, United States$/ {prefix="#"}' < /etc/pacman.d/mirrorlist > mirrorlist.us
+		mv mirrorlist.us /etc/pacman.d/mirrorlist
+
 5. Install base system, skipping the following modules, using: `pacstrap -i /mnt base`
 
 	* ^19 - heirloop-mailx
 	* ^23 - jfsutils
 	* ^32 - nano
-	* ^35 - pcmciautils
-	* ^37 - ppp
-	* ^40 - reiserfsprogs
-	* ^53 - wpa_supplicant
-	* ^54 - xfsprogs
+	* ^37 - pcmciautils
+	* ^39 - ppp
+	* ^42 - reiserfsprogs
+	* ^53 - xfsprogs
 
 6. Install grub and dhclient using: `pacstrap /mnt grub-bios dhclient`
 
@@ -49,8 +51,6 @@
 			#add virtio modules to MODULES list
 			#i.e. MODULES="virtio virtio_pci virtio_blk virtio_net virtio_ring"
 		mkinitcpio -p linux
-		vi /etc/rc.conf #remove network from list of DAEMONS
-		echo 'dhclient -6 eth0' >> /etc/rc.local
 		passwd #set root password
 
 8. Configure grub:
@@ -64,6 +64,18 @@
 		exit #out of chroot
 		umount /mnt
 		reboot
+
+10. Setup networking:
+
+		cp /etc/network.d/examples/ethernet-dhcp /etc/network.d/lan
+		vi /etc/network.d/lan
+			# change IP from dhcp to no
+			# add IP6=dhcp
+			# add DHCLIENT=yes
+			# add DHCLIENT6_OPTIONS='-cf /etc/dhclient.conf'
+		netcfg lan
+		systemctl enable netcfg@lan
+		# install $basedir/etc/dhclient.conf to /etc/dhclient.conf
 
 # Additional Software
 
@@ -81,7 +93,7 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 
 * openssh
 
-	1. Add `sshd` to `DAEMONS` list in `/etc/rc.conf`
+		systemctl enable sshd
 
 * sudo
 
@@ -93,8 +105,9 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 * vim
 
 		cp /usr/share/vim/vim73/vimrc_example.vim /etc/skel/.vimrc
-		echo 'set viminfo=""' >> /etc/skel/.vimrc
-		sed -i 's/\(set backup\)/"\1/' /etc/ske/.vimrc
+		vi /etc/skel/.vimrc
+			# add 'set viminfo=""'
+			# change set backup to set nobackup
 		mkdir /etc/skel/.vim
 		cat > /etc/skel/.vim/.netrwhist << 'EOF'
 		let g:netrw_dirhistmax  =0
@@ -110,19 +123,17 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 * agetty
 
 	1. Replace `/etc/issue`: `echo -e '[\l]\n' > /etc/issue`
-	2. Reduce the number of terminals in `/etc/inittab` to 3.
+	2. Disable unneeded terminals: `systemctl mask getty@ttyX`
 
 * bash
 
-	1. Install `bash.bashrc` from arch-host to `/etc/bash.bashrc`
-	2. Install `home/bashrc` from arch-host to `/etc/skel/.bashrc`
+	1. Install `/etc/bash.bashrc` from arch-host
+	2. Install `/etc/skel/.bashrc` from arch-host
 
-* dhclient
+* filesystem
 
-	1. Install `etc/dhclient.init` to `/etc/rc.d/dhclient`
-	2. Install `etc/dhclient.conf` to `/etc/dhclient.conf`
-	3. Add `dhclient` to `DAEMONS` list in `/etc/rc.conf`
-	4. Remove `dhclient ...` from `/etc/rc.local`
+	1. Comment out `/tmp` from `/etc/fstab`
+	2. Disable mounting `tmpfs` on `/tmp`: `systemctl mask tmp.mount`
 
 * login.defs
 
@@ -144,11 +155,11 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 
 1. Add or modify the following in `/etc/postfix/main.cf`:
 
-		mydestination = 
+		mydestination =
 		mynetworks_style = host
 		virtual_mailbox_domains = regexp:/etc/postfix/vdomains
 		virtual_mailbox_base = /var/postfix/
-		virtual_mailbox_maps = hash:/etc/postfix/vmailbox, regexp:/etc/postfix/vmailbox-catchall
+		virtual_mailbox_maps = hash:/etc/postfix/vmailbox, static:postmaster/
 		virtual_minimum_uid = 99	# 99 is uid of nobody
 		virtual_uid_maps = static:99
 		virtual_gid_maps = static:99
@@ -163,35 +174,32 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 		testuser1@mydomain.org	testuser1/
 		testuser2@mydomain.org	testuser2/
 
-4. Create `/etc/postfix/vmailbox-catchall` to route all other messages to a catchall account:
-
-		/.+/ catchall/
-
-5. Update the postfix databases.
+4. Update the postfix databases.
 
 		postmap /etc/postfix/vdomains
 		postmap /etc/postfix/vmailbox
-		postmap /etc/postfix/vmailbox-catchall
 
-6. Create the `/var/postfix` dir and make it owned by nobody:
+5. Create the `/var/postfix` dir and make it owned by nobody:
 
 		install -o nobody -g nobody -m 0775 -d /var/postfix
 
-7. Add `postfix` to the `DAEMONS` list in `/etc/rc.conf`
+6. Enable postfix at boot:
+
+		systemctl enable postfix
 
 ## Dovecot
 
-1. Install `etc/dovecot.conf` to `/etc/dovecot/dovecot.conf`
+1. Install `$basedir/etc/dovecot.conf` to `/etc/dovecot/dovecot.conf`
 
 2. Create `/etc/dovecot/users`:
 
 		testuser1:{passwd}
 		testuser2:{passwd}
-		catchall:{passwd}
+		postmaster:{passwd}
 
 3. Generate the hashed password using: `doveadm pw -s ssha512`
 
-4. Add `dovecot` to the `DAEMONS` list in `/etc/rc.conf`
+4. Enable dovecot at boot: `systemctl enable dovecot`
 
 ## Attachment Extractor
 
@@ -264,12 +272,12 @@ Installation:
 	useradd -d /opt/oracle -m -k /dev/null -r -s /sbin/nologin oracle
 	chmod 0755 /opt/oracle
 	mkdir /tmp/oracle.tmp
-	unzip -q $src/arch-guest/linux.x64_11gR2_database_1of2.zip -d /tmp/oracle.tmp
-	unzip -q $src/arch-guest/linux.x64_11gR2_database_1of2.zip -d /tmp/oracle.tmp
+	unzip -q $src/linux.x64_11gR2_database_1of2.zip -d /tmp/oracle.tmp
+	unzip -q $src/linux.x64_11gR2_database_1of2.zip -d /tmp/oracle.tmp
 	cd /tmp/oracle.tmp/database
 	# run the following as root in another terminal
 	while [ ! -e /opt/oracle/database/11.2.0/sysman/lib/ins_emagent.mk ]; do sleep 1; done; sudo -u oracle sed -i 's/$(MK_EMAGENT_NMECTL)/$(MK_EMAGENT_NMECTL) -lnnz11/' /opt/oracle/database/11.2.0/sysman/lib/ins_emagent.mk
-	sudo -u oracle ./runInstaller -silent -responseFile $basedir/arch-guest/contrib/oracle-11gR2.rsp -ignoreSysPrereqs -ignorePrereq
+	sudo -u oracle ./runInstaller -silent -responseFile $basedir/oracle/oracle-11gR2.rsp -ignoreSysPrereqs -ignorePrereq
 	# ignore the error: /usr/lib/libstdc++.so.5: undefined reference to `memcpy@GLIBC_2.14'
 	/opt/oracle/oraInventory/orainstRoot.sh
 	/opt/oracle/database/11.2.0/root.sh
@@ -278,6 +286,7 @@ Installation:
 	install -o root   -g root   -m 0755 $basedir/oracle/profile.sh /etc/profile.d/oracle.sh
 	install -o oracle -g oracle -m 0644 $basedir/oracle/sqlnet.ora /opt/oracle/database/11.2.0/network/admin/sqlnet.ora
 	ldconfig
+	visudo # add 'Defaults env_keep += ORACLE_HOME'
 
 ## Creatig a Database
 
@@ -288,17 +297,15 @@ Installation:
 
 ## Starting a Database
 
-	# ensure that ORACLE_HOME does not have trailing slash
-	sudo -u oracle ORACLE_HOME=/opt/oracle/database/11.2.0 ORACLE_SID=<sid> /opt/oracle/database/11.2.0/bin/sqlplus '/ as sysdba'
+	sudo -u oracle ORACLE_SID=<sid> /opt/oracle/database/11.2.0/bin/sqlplus '/ as sysdba'
 		startup
-	sudo -u oracle ORACLE_HOME=/opt/oracle/database/11.2.0 /opt/oracle/database/11.2.0/bin/lsnrctl start
+	sudo -u oracle /opt/oracle/database/11.2.0/bin/lsnrctl start
 
 ## Stopping a Database
 
-	# ensure that ORACLE_HOME does not have trailing slash
-	sudo -u oracle ORACLE_HOME=/opt/oracle/database/11.2.0 ORACLE_SID=<sid> /opt/oracle/database/11.2.0/bin/sqlplus '/ as sysdba'
+	sudo -u oracle ORACLE_SID=<sid> /opt/oracle/database/11.2.0/bin/sqlplus '/ as sysdba'
 		shutdown
-	sudo -u oracle ORACLE_HOME=/opt/oracle/database/11.2.0 /opt/oracle/database/11.2.0/bin/lsnrctl stop
+	sudo -u oracle /opt/oracle/database/11.2.0/bin/lsnrctl stop
 
 # Misc Services
 
@@ -324,9 +331,9 @@ Installation:
 
 * memcached
 
-	1. Remove `-l 127.0.0.1` from `MEMCACHED_ARGS` in `/etc/conf.d/memcached`
+	1. Remove `-l 127.0.0.1` from `ExecStart` in `/usr/lib/systemd/system/memcached.service`
 
-	2. Add `memcached` to the `DAEMONS` list in `/etc/rc.conf`
+	2. Enable memcached at boot: `systemctl enable memcached`
 
 * vsftpd
 
