@@ -129,6 +129,7 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 
 	1. Install `/etc/bash.bashrc` from arch-host
 	2. Install `/etc/skel/.bashrc` from arch-host
+	3. Add `set mark-symlinked-directories on` to `/etc/inputrc`
 
 * filesystem
 
