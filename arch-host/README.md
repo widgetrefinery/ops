@@ -304,6 +304,13 @@ Configuration:
 
 		vm.nr_hugepages = 140
 
+6. Add `Options=mode=1770,gid=kvm` to the end of `/usr/lib/systemd/system/dev-hugepages.mount`
+
+7. Restart systemd:
+
+		systemctl --system daemon-reload
+		systemctl restart dev-hugepages.mount
+
 ## Guest Networking
 
 * Enable packet forwarding:
