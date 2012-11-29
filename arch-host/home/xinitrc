@@ -2,6 +2,7 @@
 xautolock -time 10 -locker "i3lock -c 000000 -i ~/.i3/i3lock.png" &
 [ -e ~/.fehbg ] && . ~/.fehbg
 if [ -z "${NXSESSIONID:-}" ]; then
+	xrandr --output DVI-1 --pos 1280x0
 	exec i3 -c ~/.i3/i3.conf
 else
 	xrdb ~/.Xdefaults

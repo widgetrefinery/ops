@@ -1,0 +1,5 @@
+INTERFACE="br0"
+CONNECTION="bridge"
+IP="no"
+IP6="static"
+ADDR6="fd00::5:1/64"

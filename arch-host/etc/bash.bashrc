@@ -10,7 +10,7 @@ HISTFILESIZE=0
 
 export LESSHISTFILE=-
 
-if [ 'xterm' != "$TERM" ]; then
+if [ 'xterm' != "$TERM" -a 'screen' != "$TERM" ]; then
 	TMOUT="$((60*10))"
 else
 	cat /etc/motd

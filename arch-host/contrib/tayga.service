@@ -1,0 +1,11 @@
+[Unit]
+Description=Simple, no-fuss NAT64 for Linux
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/run/tayga.pid
+ExecStart=/usr/sbin/tayga -p /run/tayga.pid
+
+[Install]
+WantedBy=multi-user.target

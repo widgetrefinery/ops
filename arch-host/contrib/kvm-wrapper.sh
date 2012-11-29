@@ -19,7 +19,7 @@ function f_run {
 	vm_disk="-drive file=/dev/mapper/$vm_name,if=virtio,index=0,media=disk,cache=none,format=raw"
 	case $3 in
 		arch)		vm_rtc= ;;
-		win)		vm_rtc="-rtc base=localtime,clock=rt,driftfix=slew" ;;
+		win)		vm_rtc="-rtc base=localtime,clock=rt,driftfix=slew -no-shutdown" ;;
 		win-install)	vm_rtc="-rtc base=localtime,clock=rt,driftfix=slew"
 				vm_tmpdisk=/tmp/tmp.img
 				vm_disk="-hda /dev/mapper/$vm_name -drive file=$vm_tmpdisk,if=virtio,media=disk,format=qcow2"

@@ -2,14 +2,14 @@
 
 * /
 
-		dd if=/dev/zero of=/dev/sda bs=4096K
-		mdadm --create --metadata=1.1 --homehost=$HOSTNAME --raid-devices=2 --level=1 /dev/md0 /dev/sda missing
+		dd if=/dev/zero of=/dev/sda bs=4M
+		mdadm --create --metadata=1.1 --homehost=$HOSTNAME --raid-devices=2 --size=152064M --level=1 /dev/md0 /dev/sda missing
 		pvcreate /dev/md0
 		vgcreate vg0 /dev/md0
-		lvcreate -L16G -n $HOSTNAME vg0
+		lvcreate -L32G -n $HOSTNAME vg0
 		cryptsetup luksFormat --use-random /dev/vg0/$HOSTNAME
 		cryptsetup luksOpen /dev/vg0/$HOSTNAME $HOSTNAME
-		dd if=/dev/zero of=/dev/mapper/$HOSTNAME bs=4096K
+		dd if=/dev/zero of=/dev/mapper/$HOSTNAME bs=4M
 		mke2fs -t ext4 /dev/mapper/$HOSTNAME
 		mount /dev/mapper/$HOSTNAME /mnt
 
@@ -21,19 +21,11 @@
 			mkpart primary 20480s 282623s	#~128MB /boot partition
 			mkpart primary 282624s -1s	#rest of drive
 			set 1 bios_grub on
+		fdisk /dev/sdc
+			# mark gpt pseudo partition bootable
 		mke2fs -t ext2 /dev/sdc2
 		mkdir /mnt/boot
 		mount /dev/sdc2 /mnt/boot
-
-* /boot (msdos)
-
-		parted /dev/sdc
-			mklabel msdos
-			mkpart primary 20480s 282623s	#~128MB /boot partition
-			mkpart primary 282624s -1s	#rest of drive
-		mke2fs -t ext2 /dev/sdc1
-		mkdir /mnt/boot
-		mount /dev/sdc1 /mnt/boot
 
 # Install OS
 
@@ -47,11 +39,10 @@
 	* ^19 - heirloop-mailx
 	* ^23 - jfsutils
 	* ^32 - nano
-	* ^35 - pcmciautils
-	* ^37 - ppp
-	* ^40 - reiserfsprogs
-	* ^53 - wpa_supplicant
-	* ^54 - xfsprogs
+	* ^37 - pcmciautils
+	* ^39 - ppp
+	* ^42 - reiserfsprogs
+	* ^53 - xfsprogs
 
 3. Install grub using: `pacstrap /mnt grub-bios`
 
@@ -63,7 +54,7 @@
 		echo $HOSTNAME > /etc/hostname
 		ln -fns /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 		echo 'LANG="en_US.UTF-8"' > /etc/locale.conf
-		vi /etc/locale.get #enable relevant locales
+		vi /etc/locale.gen #enable relevant locales
 		locale-gen
 		vi /etc/mkinitcpio.conf
 			# add video driver (i915, radeon, etc.) to MODULES list
@@ -79,8 +70,7 @@
 		grub-install /dev/sdc
 		rm -f /boot/grub/grub.cfg.example
 		vi /boot/grub/grub.cfg
-			# if using gpt boot device, change "set root='hd2,gpt2'" to "set root='hd0,gpt2'"
-			# if using msdos boot device, change "set root='hd2,msdos1'" to "set root='hd0,msdos1'"
+			# change "set root='hd2,gpt2'" to "set root='hd0,gpt2'"
 			# add "lvmwait=/dev/mapper/vg0-$HOSTNAME cryptdevice=/dev/mapper/vg0-$HOSTNAME:$HOSTNAME" to linux command
 			# remove search statements
 
@@ -89,6 +79,11 @@
 		exit #out of chroot
 		umount /mnt/boot /mnt
 		reboot
+
+7. Setup networking:
+
+		cp /etc/network.d/examples/ethernet-dhcp /etc/network.d/eth0
+		systemctl enable netcfg@eth0
 
 ## Resources
 
@@ -118,12 +113,6 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 
 * git
 
-* iptables
-
-	1. Install `$basedir/etc/iptables.rules` to `/etc/iptables/iptables.rules`
-	2. Install `$basedir/etc/ip6tables.rules` to `/etc/iptables/ip6tables.rules`
-	3. Add `iptables` and `ip6tables` to `DAEMONS` list in `/etc/rc.conf`
-
 * mlocate
 
 		updatedb
@@ -132,11 +121,11 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 
 * ntp
 
-	1. Add `ntpd` to `DAEMONS` list in `/etc/rc.conf`
+		systemctl enable ntpd
 
 * openssh
 
-	1. Add `sshd` to `DAEMONS` list in `/etc/rc.conf`
+		systemctl enable sshd
 
 * parted
 
@@ -179,7 +168,6 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 * agetty
 
 	1. Replace `/etc/issue`: `echo -e '[\l]\n' > /etc/issue`
-	2. Reduce the number of terminals in `/etc/inittab` to 3.
 
 * bash
 
@@ -191,6 +179,16 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 
 	1. Add `net.ipv6.conf.eth0.disable_ipv6 = 1` to `/etc/sysctl.conf`
 	2. Add `noipv6rs` to `/etc/dhcpcd.conf`
+
+* filesystem
+
+	1. Disable mounting `tmpfs` on `/tmp`: `systemctl mask tmp.mount`
+
+* iptables
+
+	1. Install `$basedir/etc/iptables.rules` to `/etc/iptables/iptables.rules`
+	2. Install `$basedir/etc/ip6tables.rules` to `/etc/iptables/ip6tables.rules`
+	3. Enable `iptables` and `ip6tables` services via `systemctl enable ...`
 
 * login.defs
 
@@ -204,8 +202,6 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 * xorg-server-utils
 * xf86-video-intel
 * xf86-video-ati
-* xf86-video-vesa
-* xf86-video-fbdev
 
 ## Display Manager
 
@@ -214,17 +210,7 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 
 Configuration:
 
-1. Edit `/etc/rc.conf`:
-
-	1. Add `dbus` to `DAEMONS` list
-
-2. Edit `/etc/inittab`:
-
-	1. Comment out `id:3:initdefault:`
-	2. Uncomment `id:5:initdefault:`
-	3. Comment out `x:5:respawn:/usr/bin/xdm -nodaemon`
-	4. Uncomment `x:5:respawn:/usr/bin/slim >/dev/null 2>&1`
-	5. Add `xt:5:wait:/usr/bin/chvt 7`
+	systemctl enable slim
 
 Themes:
 
@@ -232,9 +218,7 @@ Themes are defined in `/usr/share/slim/themes`. Simplest customization is to jus
 
 ## Window Manager
 
-* i3-wm
-* i3lock
-* i3status
+* i3
 
 Configuration:
 
@@ -255,16 +239,22 @@ The screen locker will use ~/.i3/i3lock.png as the lock image if it exists. Othe
 
 * alsa-utils
 * chromium
+* cups
 * dmenu
 * feh
-* firefox
 * flashplugin
 * imagemagick
 * libao (pre-req for rdesktop-ipv6)
+* pidgin
 * rdesktop-ipv6 (aur)
 * thunderbird
+* vlc
 * xautolock
 * xterm
+
+Configuration:
+
+	systemctl enable cups
 
 ## NX Server
 
@@ -302,19 +292,11 @@ Configuration:
 
 3. Add yourself to the `disk`, `kvm`, and `wheel` groups
 
-4. Modify `/etc/rc.sysinit` to create `/dev/hugepages` directory:
-
-		sed -i 's!\(mkdir -p /dev/{\)!\1hugepages,!' /etc/rc.sysinit
-
-7. Add `hugepages` to `/etc/fstab`:
-
-		hugetlbfs	/dev/hugepages	hugetlbfs	mode=1770,gid=kvm	0 0
-
-8. Note `Hugepagesize` in `/proc/meminfo`. Take the amount of memory to allocate for vms and divide by this number. Add some buffer and cat it to `/proc/sys/vm/nr_hugepages` like so:
+4. Note `Hugepagesize` in `/proc/meminfo`. Take the amount of memory to allocate for vms and divide by this number. Add some buffer and cat it to `/proc/sys/vm/nr_hugepages` like so:
 
 		echo 140 > /proc/sys/vm/nr_hugepages
 
-9. If all goes well add it to /etc/sysctl.conf:
+5. If all goes well add it to /etc/sysctl.conf:
 
 		vm.nr_hugepages = 140
 
@@ -325,6 +307,17 @@ Configuration:
 	1. Change `net.ipv4.ip_forward = 0` to `net.ipv4.ip_forward = 1` in `/etc/sysctl.conf`
 	2. Change `net.ipv6.conf.all.forwarding = 0` to `net.ipv6.conf.all.forwarding = 1` in `/etc/sysctl.conf`
 	3. Reload kernel parameters: `sysctl -p`
+
+* Configure br0 device:
+
+		pacman -S bridge-utils
+		cp $basedir/guest-networking/br0 /etc/network.d/br0
+		systemctl enable netcfg@br0
+
+* Configure nat64 device:
+
+		cp $basedir/guest-networking/nat64 /etc/network.d/nat64
+		systemctl enable netcfg@br0
 
 * Allow qemu to use bridge br0:
 
@@ -337,7 +330,7 @@ Configuration:
 	3. Install `$basedir/guest-networking/named.zone` to `/var/named/named.zone`
 	4. Install `$basedir/guest-networking/named.reverse` to `/var/named/named.reverse`
 	5. Edit `/var/named/root.hint` commenting out the ipv6 entries
-	6. Add `named` to `DAEMONS` list in `/etc/rc.conf`
+	6. Enable named daemon: `systemctl enable named`
 	7. `chmod 770 /var/named`
 	8. Create `/etc/resolv.conf.head`:
 
@@ -351,18 +344,12 @@ Configuration:
 * Install and configure dhcp:
 
 	1. Install `$basedir/guest-networking/dhcpd.conf` to `/etc/dhcpd.conf`
-	2. Add `dhcp6` to `DAEMONS` list in `/etc/rc.conf`
-
-* Install and configure kvm-network:
-
-	1. Install bridge-utils
-	1. Install `$basedir/contrib/kvm-network.sh` to `/etc/rc.d/kvm-network`
-	2. Add `kvm-network` to `DAEMONS` list in `/etc/rc.conf`
+	2. Enable dhcpd6 daemon: `systemctl enable dhcpd6`
 
 * Install and configure radvd:
 
 	1. Install `$basedir/guest-networking/radvd.conf` to `/etc/radvd.conf`
-	2. Add `radvd` to `DAEMONS` list in `/etc/rc.conf`
+	2. Enable radvd daemon: `systemctl enable radvd`
 
 * Install and configure tayga:
 
@@ -375,20 +362,16 @@ Configuration:
 			sudo pacman -U tayga-0.9.2-1-i686.pkg.tar.xz
 
 	2. Install `$basedir/guest-networking/tayga.conf` to `/etc/tayga.conf`
+	3. Install `$basedir/contrib/tayga.service` to `/usr/lib/systemd/system/tayga.service`
+	4. Enable tayga daemon: `systemctl enable tayga`
 
-## Network Shares
+## Samba
 
-* nfs-utils
+* samba
 
-Server Configuration:
+Configuration:
 
-1. Set the domain in `/etc/idmapd.conf`
-2. Define shares in `/etc/exports`
-3. Add `rpcbind`, `nfs-common`, and `nfs-server` to the `DAEMONS` list in `/etc/rc.conf`
-
-Client Configuration:
-
-1. Set the domain in `/etc/idmapd.conf`
-2. Set `NEED_IDMAPD="yes"` in `/etc/conf.d/nfs-common.conf`
-3. Add `rpcbind` and `nfs-common` to the `DAEMONS` list in `/etc/rc.conf`
+1. Install `$basedir/etc/smb.conf` to `/etc/samba/smb.conf`
+2. Enable smb daemon: `systemctl enable smbd`
+3. Add users: `smbpasswd -a <username>`
 

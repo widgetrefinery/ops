@@ -1,0 +1,13 @@
+INTERFACE='nat64'
+CONNECTION='tuntap'
+MODE='tun'
+USER='nobody'
+GROUP='nobody'
+
+IP='static'
+ADDR='192.168.4.1'
+IP6='static'
+ADDR6='fd00::5:1'
+ROUTES6='fd04::/96'
+SKIPNOCARRIER='yes'
+
