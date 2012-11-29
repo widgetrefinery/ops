@@ -169,6 +169,10 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 
 	1. Replace `/etc/issue`: `echo -e '[\l]\n' > /etc/issue`
 
+* audio
+
+	1. Blacklist `i82975x_edac` by creating `/etc/modprobe.d/sound.conf` containing `blacklist i82975x_edac`
+
 * bash
 
 	1. Install `$basedir/etc/bash.bashrc` to `/etc/bash.bashrc`
