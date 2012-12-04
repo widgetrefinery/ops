@@ -6,15 +6,16 @@
 -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 -A INPUT -i lo -j ACCEPT
 -A INPUT -p tcp --dport 22 -j ACCEPT
--A INPUT -i br0 -s fd00::/96 -p ipv6-icmp                    -j ACCEPT
--A INPUT -i br0 -s fd00::/96 -p tcp --sport  20              -j ACCEPT -m comment --comment "ftp"
--A INPUT -i br0 -s fd00::/96 -p tcp             --dport   53 -j ACCEPT -m comment --comment "dns"
--A INPUT -i br0 -s fd00::/96 -p udp             --dport   53 -j ACCEPT -m comment --comment "dns"
--A INPUT -i br0 -s fd00::/96 -p udp             --dport  137 -j ACCEPT -m comment --comment "cifs"
--A INPUT -i br0 -s fd00::/96 -p udp             --dport  138 -j ACCEPT -m comment --comment "cifs"
--A INPUT -i br0 -s fd00::/96 -p tcp             --dport  139 -j ACCEPT -m comment --comment "cifs"
--A INPUT -i br0 -s fd00::/96 -p tcp             --dport  445 -j ACCEPT -m comment --comment "cifs"
--A INPUT -i br0 -s fd00::/96 -p udp --sport 546 --dport  547 -j ACCEPT -m comment --comment "dhcp"
+-A INPUT -i br0 -p ipv6-icmp                    -j ACCEPT
+-A INPUT -i br0 -p tcp --sport  20              -j ACCEPT -m comment --comment "ftp"
+-A INPUT -i br0 -p tcp             --dport   53 -j ACCEPT -m comment --comment "dns"
+-A INPUT -i br0 -p udp             --dport   53 -j ACCEPT -m comment --comment "dns"
+-A INPUT -i br0 -p udp             --dport  137 -j ACCEPT -m comment --comment "cifs"
+-A INPUT -i br0 -p udp             --dport  138 -j ACCEPT -m comment --comment "cifs"
+-A INPUT -i br0 -p tcp             --dport  139 -j ACCEPT -m comment --comment "cifs"
+-A INPUT -i br0 -p tcp             --dport  445 -j ACCEPT -m comment --comment "cifs"
+-A INPUT -i br0 -p tcp --sport 546 --dport  547 -j ACCEPT -m comment --comment "dhcp6"
+-A INPUT -i br0 -p udp --sport 546 --dport  547 -j ACCEPT -m comment --comment "dhcp6"
 
 -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
 #-A FORWARD -i br0 -o nat64 -p tcp --dport   80                    -j ACCEPT -m comment --comment "enable for running pacman in vm"
@@ -35,6 +36,8 @@
 -A OUTPUT -p tcp --dport 1521 -j ACCEPT -m comment --comment "oracle"
 -A OUTPUT -p tcp --dport 3389 -j ACCEPT -m comment --comment "rdesktop"
 -A OUTPUT -p tcp --dport 8080 -j ACCEPT -m comment --comment "http"
+-A OUTPUT -p tcp --sport 547 --dport 546 -j ACCEPT -m comment --comment "dhcp6"
+-A OUTPUT -p udp --sport 547 --dport 546 -j ACCEPT -m comment --comment "dhcp6"
 -A OUTPUT -p tcp -j REJECT --reject-with tcp-reset
 -A OUTPUT -p udp -j REJECT --reject-with icmp6-port-unreachable
 -A OUTPUT        -j REJECT --reject-with icmp6-port-unreachable
