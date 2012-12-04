@@ -247,8 +247,11 @@ The screen locker will use ~/.i3/i3lock.png as the lock image if it exists. Othe
 * dmenu
 * feh
 * flashplugin
+* ibus-anthy
+* ibus-qt
 * imagemagick
 * libao (pre-req for rdesktop-ipv6)
+* otf-ipafonts (aur)
 * pidgin
 * rdesktop-ipv6 (aur)
 * thunderbird
@@ -259,6 +262,7 @@ The screen locker will use ~/.i3/i3lock.png as the lock image if it exists. Othe
 Configuration:
 
 	systemctl enable cups
+	ibus-setup
 
 ## NX Server
 
