@@ -254,10 +254,12 @@ The screen locker will use ~/.i3/i3lock.png as the lock image if it exists. Othe
 * otf-ipafonts (aur)
 * pidgin
 * rdesktop-ipv6 (aur)
+* rxvt-unicode
 * thunderbird
 * vlc
 * xautolock
-* xterm
+* xorg-xclipboard
+* xorg-xprop
 
 Configuration:
 
