@@ -5,6 +5,16 @@
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
+case "$TERM" in
+	rxvt-unicode-256color)
+		export TERM=rxvt
+		cat /etc/motd;;
+	screen)
+		;;
+	*)
+		TMOUT="$((60*10))";;
+esac
+
 alias ls='ls --color=auto'
 alias vi=vim
 

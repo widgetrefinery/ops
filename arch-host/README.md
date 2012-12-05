@@ -109,7 +109,6 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 		EOF
 		chmod 755 /etc/cron.hourly/fortune-motd
 		/etc/cron.hourly/fortune-motd
-		sed -i '/pam_motd\.so/d' /etc/pam.d/system-login
 
 * git
 
