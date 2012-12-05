@@ -98,8 +98,26 @@
 Run `pacman -Syy` and `pacman-key --populate` first before installing.
 
 * base-devel
-
 * dnsutils
+* fortune-mod
+* git
+* mlocate
+* nmap
+* ntp
+* openssh
+* p7zip
+* parted
+* pkgfile
+* rsync
+* screen
+* squashfs-tools
+* sudo
+* unzip
+* vim
+* wget
+* wxgtk (optional dependency for p7zip)
+
+Configuration:
 
 * fortune-mod
 
@@ -110,37 +128,7 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 		chmod 755 /etc/cron.hourly/fortune-motd
 		/etc/cron.hourly/fortune-motd
 
-* git
-
-* mlocate
-
-		updatedb
-
-* nmap
-
-* ntp
-
-		systemctl enable ntpd
-
-* openssh
-
-		systemctl enable sshd
-
-* parted
-
-* pkgfile
-
-		pkgfile --update
-
-* rsync
-
 * screen
-
-	1. Uncomment `startup_message off` in `/etc/screenrc`
-
-* squashfs-tools
-
-* sudo
 
 		cat >> /etc/sudoers << 'EOF'
 		Defaults timestamp_timeout=0
@@ -158,9 +146,14 @@ Run `pacman -Syy` and `pacman-key --populate` first before installing.
 		let g:netrw_dirhist_cnt =0
 		EOF
 
-* unzip
+* other
 
-* wget
+		updatedb
+		systemctl enable ntpd
+		systemctl enable sshd
+		pkgfile --update
+		vi /etc/screenrc
+			#uncomment `startup_message off`
 
 # OS Configuration
 
