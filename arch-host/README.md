@@ -171,6 +171,10 @@ Configuration:
 	2. Install `$basedir/home/bashrc` to `/etc/skel/.bashrc`
 	3. Add `set mark-symlinked-directories on` to `/etc/inputrc`
 
+* cronie
+
+	1. Enable `cronie` service: `systemctl enable cronie`
+
 * disable ipv6
 
 	1. Add `net.ipv6.conf.eth0.disable_ipv6 = 1` to `/etc/sysctl.conf`
