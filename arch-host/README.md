@@ -247,7 +247,7 @@ The screen locker will use ~/.i3/i3lock.png as the lock image if it exists. Othe
 * ibus-qt
 * imagemagick
 * libao (pre-req for rdesktop-ipv6)
-* otf-ipafonts (aur)
+* otf-ipafont (aur)
 * pidgin
 * rdesktop-ipv6 (aur)
 * rxvt-unicode

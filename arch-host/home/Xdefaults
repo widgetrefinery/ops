@@ -2,3 +2,11 @@ xterm*background: #000000
 xterm*foreground: #999999
 xterm*color4: royalblue
 xterm*metaSendsEscape: true
+
+Rxvt*background: black
+Rxvt*foreground: gray
+Rxvt*color4: royalblue
+Rxvt*color12: royalblue
+Rxvt*transparent: true
+Rxvt*shading: 20
+Rxvt*scrollBar: false
