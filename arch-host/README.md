@@ -60,7 +60,7 @@
 			# add video driver (i915, radeon, etc.) to MODULES list
 			# i.e. MODULES="i915"
 			# add mdadm_udev, lvm2, encrypt to HOOKS list
-			# i.e. HOOKS="base udev autodetect pata scsi sata mdadm_udev lvm2 usbinput encrypt filesystems fsck"
+			# i.e. HOOKS="base udev autodetect modconf block mdadm_udev lvm2 usbinput encrypt filesystems fsck"
 		mkinitcpio -p linux
 		passwd #set root password
 
@@ -128,7 +128,7 @@ Configuration:
 		chmod 755 /etc/cron.hourly/fortune-motd
 		/etc/cron.hourly/fortune-motd
 
-* screen
+* sudo
 
 		cat >> /etc/sudoers << 'EOF'
 		Defaults timestamp_timeout=0
