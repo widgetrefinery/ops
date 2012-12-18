@@ -19,6 +19,8 @@
 
 -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
 #-A FORWARD -i br0 -o nat64 -p tcp --dport   80                    -j ACCEPT -m comment --comment "enable for running pacman in vm"
+-A FORWARD -s fd00::/96                        -d fd00::/96       -j ACCEPT -m comment --comment "vm network"
+-A FORWARD -s fd00::/96                        -d ff02::/64       -j ACCEPT -m comment --comment "vm network - link-local multicast"
 
 -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 -A OUTPUT -o lo -j ACCEPT
