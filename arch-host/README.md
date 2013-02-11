@@ -194,6 +194,11 @@ Configuration:
 
 	1. Add `CREATE_HOME yes` to `/etc/login.defs`
 
+* journald
+
+	1. Uncomment `SystemMaxUse` and set it to `100M` in `/etc/systemd/journald.conf`
+	2. Restart journald service: `systemctl restart systemd-journald`
+
 # GUI
 
 ## X
